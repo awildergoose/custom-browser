@@ -155,18 +155,13 @@ where
 
 #[macro_export]
 macro_rules! impl_obj_traits {
-    ($name:ident => |$fields:ident| $body:block) => {
+    ($name:ident) => {
         use mlua::UserData;
 
         impl UserData for $name {
-            fn add_fields<F: mlua::UserDataFields<Self>>($fields: &mut F) {
-                $crate::lua::holder::add_object_fields::<Self, F>($fields);
-                $body
+            fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+                $crate::lua::holder::add_object_fields::<Self, F>(fields);
             }
         }
-    };
-
-    ($name:ident) => {
-        $crate::impl_obj_traits!($name => |fields| {});
     };
 }
