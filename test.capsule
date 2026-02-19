@@ -10,6 +10,7 @@
             -- capsule.root().children[1].style.color = "red"
             -- print(capsule.root().children[1].text)
             print(obj.text)
+            capsule.find_element("cooltextelement").text = `{math.random(1, 10000)}`
             end
 
             print(capsule.root().children[1].text)
@@ -24,7 +25,7 @@
             <text color="#ff00008f">hello, world! b5</text>
         </obj>
         <obj align="center" justify="flex_start" flexdir="column">
-            <text>ahello world but cooler!</text>
+            <text id="cooltextelement">ahello world but cooler!</text>
             <obj width="41.5%" height="20" color="red" />
             <text color="#ff00008f">hello, world! b2</text>
         </obj>

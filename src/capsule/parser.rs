@@ -80,6 +80,7 @@ macro_rules! event_attr {
     ($child: ident, $events: ident, $name: ident) => {
         if let Some(value) = $child.attribute(stringify!($name)) {
             $events.push(CapsuleObjectEvent::new(stringify!($name), value));
+            log::info!("added event {} to {:?}", stringify!($name), $child);
         }
     };
 }
@@ -175,6 +176,7 @@ fn parse_capsule_view(view: Node) -> CSView {
             .map(std::string::ToString::to_string)
             .map(clean_text);
 
+        // collect children
         let children = ConcurrentVec::new();
 
         for child in child.children() {
@@ -184,6 +186,7 @@ fn parse_capsule_view(view: Node) -> CSView {
             }
         }
 
+        // collect styles & events
         let mut style = Styling::default();
         let events = ConcurrentVec::new();
 
@@ -197,13 +200,19 @@ fn parse_capsule_view(view: Node) -> CSView {
         color_attr!(child, style, background_color);
         event_attr!(child, events, onclick);
 
+        // collect id
+        let id = child.attribute("id").map(std::string::ToString::to_string);
+
+        // clone and create arcs
         let mut style_clone = style.clone();
 
         let children_arc = children.into();
         let style_arc = RwLock::new(style).into();
         let events_arc = events.into();
+        let id_arc = RwLock::new(id).into();
 
-        let mut ctx = CapsuleObjectCreationContext::new(children_arc, events_arc, style_arc);
+        let mut ctx =
+            CapsuleObjectCreationContext::new(children_arc, events_arc, style_arc, id_arc);
 
         match tag_name {
             "text" => Some(Arc::new(CSText::new(

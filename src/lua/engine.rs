@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use log::Log;
-use mlua::{Function, Lua, StdLib};
+use mlua::{Function, Lua, StdLib, Value};
 
 use crate::{
     capsule::{Capsule, obj::ArcLock},
@@ -44,7 +44,19 @@ impl LuaEngine {
             .set(
                 "print",
                 self.lua
-                    .create_function(move |_lua, text: String| {
+                    .create_function(move |_lua, value: Value| {
+                        let text = match value {
+                            Value::Nil => "nil".to_string(),
+                            Value::Boolean(b) => b.to_string(),
+                            Value::Integer(i) => i.to_string(),
+                            Value::Number(n) => n.to_string(),
+                            Value::String(s) => s
+                                .to_str()
+                                .map_or_else(|_| "<invalid utf8>".to_owned(), |s| s.to_string()),
+                            Value::UserData(_) => "[userdata]".to_string(),
+                            other => format!("{other:?}"),
+                        };
+
                         log::debug!(logger: lua_logger, "{text}");
                         Ok(())
                     })

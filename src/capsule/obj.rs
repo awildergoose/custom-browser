@@ -15,6 +15,7 @@ pub type ArcLock<T> = Arc<RwLock<T>>;
 pub type BoxedCapsuleObject = Arc<dyn CapsuleObject + Sync + Send>;
 pub type CapsuleObjectChildren = Arc<ConcurrentVec<BoxedCapsuleObject>>;
 pub type CapsuleObjectEvents = Arc<ConcurrentVec<CapsuleObjectEvent>>;
+pub type CapsuleObjectId = ArcLock<Option<String>>;
 
 pub trait CapsuleObject: Debug {
     fn as_any(&self) -> &dyn Any;
@@ -42,6 +43,7 @@ pub trait CapsuleObject: Debug {
 
 #[derive(Debug, Default, Clone)]
 pub struct CapsuleObjectBase {
+    pub id: CapsuleObjectId,
     pub children: CapsuleObjectChildren,
     pub events: CapsuleObjectEvents,
     pub style: ArcLock<Styling>,
@@ -50,6 +52,7 @@ pub struct CapsuleObjectBase {
 
 #[derive(Debug, Default)]
 pub struct CapsuleObjectCreationContext {
+    pub id: CapsuleObjectId,
     pub children: CapsuleObjectChildren,
     pub events: CapsuleObjectEvents,
     pub style: ArcLock<Styling>,
@@ -61,8 +64,10 @@ impl CapsuleObjectCreationContext {
         children: CapsuleObjectChildren,
         events: CapsuleObjectEvents,
         style: ArcLock<Styling>,
+        id: CapsuleObjectId,
     ) -> Self {
         Self {
+            id,
             children,
             events,
             style,
@@ -77,6 +82,7 @@ impl CapsuleObjectBase {
             children: ctx.children,
             style: ctx.style,
             events: ctx.events,
+            id: ctx.id,
             computed_style: Arc::default(),
         })
     }
