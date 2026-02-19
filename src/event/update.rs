@@ -3,9 +3,12 @@ use macroquad::{
     math::Vec2,
 };
 
-use crate::capsule::{
-    Capsule,
-    obj::{ArcLock, iter_all_objects},
+use crate::{
+    capsule::{
+        Capsule,
+        obj::{ArcLock, iter_all_objects},
+    },
+    lua::holder::CapsuleObjectHandle,
 };
 
 pub fn update_events(capsule: &ArcLock<Capsule>) {
@@ -29,7 +32,10 @@ pub fn update_events(capsule: &ArcLock<Capsule>) {
                         .iter()
                         .filter(|e| e.map(|u| u.name == "onclick"))
                     {
-                        callbacks.push(e.map(|u| u.callback.clone()));
+                        callbacks.push((
+                            e.map(|u| u.callback.clone()),
+                            CapsuleObjectHandle(o.clone()),
+                        ));
                     }
                 });
             }
@@ -49,9 +55,13 @@ pub fn update_events(capsule: &ArcLock<Capsule>) {
             buttons.push(3);
         }
 
-        for cb in callbacks {
+        for (callback, handle) in &callbacks {
             for btn in &buttons {
-                if let Err(e) = lua.get_function(&cb).unwrap().call::<()>(*btn) {
+                if let Err(e) = lua
+                    .get_function(callback)
+                    .unwrap()
+                    .call::<()>((handle.clone(), *btn))
+                {
                     log::error!("Lua error: {e}");
                 }
             }
