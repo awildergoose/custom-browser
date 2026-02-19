@@ -1,6 +1,7 @@
 use std::{fmt::Debug, sync::Arc};
 
-use orx_concurrent_vec::ConcurrentVec;
+use macroquad::math::Rect;
+use orx_concurrent_vec::{ConcurrentElement, ConcurrentVec};
 use parking_lot::RwLock;
 
 use crate::{
@@ -17,6 +18,12 @@ pub type CapsuleObjectEvents = Arc<ConcurrentVec<CapsuleObjectEvent>>;
 pub trait CapsuleObject: Debug {
     fn base(&self) -> Arc<CapsuleObjectBase>;
     fn render(&self);
+    fn bounding_box(&self) -> Rect {
+        let base = self.base();
+        let computed = base.computed_style.read();
+
+        Rect::new(computed.x, computed.y, computed.width, computed.height)
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -28,11 +35,16 @@ pub struct CapsuleObjectBase {
 }
 
 impl CapsuleObjectBase {
-    pub fn new(children: CapsuleObjectChildren, style: Arc<Styling>) -> Arc<Self> {
+    pub fn new(
+        children: CapsuleObjectChildren,
+        style: Arc<Styling>,
+        events: CapsuleObjectEvents,
+    ) -> Arc<Self> {
         Arc::new(Self {
             children,
             style,
-            ..Default::default()
+            events,
+            computed_style: Arc::default(),
         })
     }
 }
@@ -61,11 +73,30 @@ impl Capsule {
             self.lua.init(&script.code);
             self.lua.start();
         }
+    }
+}
 
-        // self.lua
-        //     .get_function("onclick")
-        //     .unwrap()
-        //     .call::<()>(())
-        //     .unwrap();
+/// Recursively iterates through all objects in the capsule view
+pub fn iter_all_objects<F>(capsule: &Capsule, mut cb: F)
+where
+    F: FnMut(&ConcurrentElement<BoxedCapsuleObject>),
+{
+    fn recurse<F>(object: &ConcurrentElement<BoxedCapsuleObject>, cb: &mut F)
+    where
+        F: FnMut(&ConcurrentElement<BoxedCapsuleObject>),
+    {
+        cb(object);
+
+        let base = object.map(|o| o.base());
+
+        for obj in base.children.iter() {
+            recurse(obj, cb);
+        }
+    }
+
+    let base = capsule.view.base();
+
+    for obj in base.children.iter() {
+        recurse(obj, &mut cb);
     }
 }

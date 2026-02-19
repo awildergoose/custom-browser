@@ -9,6 +9,7 @@ use crate::{
         obj::{BoxedCapsuleObject, CapsuleMeta, CapsuleObject},
         objs::{obj::CSObj, script::CSScript, text::CSText, view::CapsuleView},
     },
+    event::CapsuleObjectEvent,
     layout::styling::Styling,
     renderer::constants::BR_LINE_HEIGHT,
 };
@@ -190,17 +191,25 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             }
         }
 
+        let events = ConcurrentVec::new();
+
+        if let Some(onclick) = child.attribute("onclick") {
+            events.push(CapsuleObjectEvent::new("onclick", onclick));
+        }
+
         let children = children.into();
         let mut style_clone = style.clone();
         let style_arc = style.into();
+        let events_arc = events.into();
 
         match tag_name {
             "text" => Some(Box::new(CSText::new(
                 child_text.as_ref().unwrap().clone(),
                 children,
                 style_arc,
+                events_arc,
             ))),
-            "obj" => Some(Box::new(CSObj::new(children, style_arc))),
+            "obj" => Some(Box::new(CSObj::new(children, style_arc, events_arc))),
             "br" => {
                 style_clone.width = Some(Dimension::Points(0.0));
                 style_clone.height = Some(Dimension::Points(BR_LINE_HEIGHT));
@@ -208,6 +217,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
                 Some(Box::new(CSObj::new(
                     ConcurrentVec::new().into(),
                     style_clone.into(),
+                    events_arc,
                 )))
             }
             "script" => Some(Box::new(CSScript::new(

@@ -1,12 +1,18 @@
 #[derive(Debug)]
 pub struct CapsuleObjectEvent {
     pub name: String,
-    pub callback: Option<String>,
+    pub callback: String,
 }
 
 impl CapsuleObjectEvent {
     #[must_use]
-    pub const fn new(name: String, callback: Option<String>) -> Self {
-        Self { name, callback }
+    pub fn new<S>(name: S, callback: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self {
+            name: name.into(),
+            callback: callback.into(),
+        }
     }
 }

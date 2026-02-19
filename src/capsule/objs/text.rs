@@ -3,7 +3,7 @@ use std::sync::Arc;
 use macroquad::color::WHITE;
 
 use crate::{
-    capsule::obj::{CapsuleObject, CapsuleObjectBase, CapsuleObjectChildren},
+    capsule::obj::{CapsuleObject, CapsuleObjectBase, CapsuleObjectChildren, CapsuleObjectEvents},
     layout::styling::Styling,
     renderer::text::draw_text_top_left,
 };
@@ -16,10 +16,15 @@ pub struct CSText {
 
 impl CSText {
     #[must_use]
-    pub fn new(text: String, children: CapsuleObjectChildren, style: Arc<Styling>) -> Self {
+    pub fn new(
+        text: String,
+        children: CapsuleObjectChildren,
+        style: Arc<Styling>,
+        events: CapsuleObjectEvents,
+    ) -> Self {
         Self {
             text,
-            base: CapsuleObjectBase::new(children, style),
+            base: CapsuleObjectBase::new(children, style, events),
         }
     }
 }
