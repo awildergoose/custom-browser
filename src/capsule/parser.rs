@@ -127,6 +127,30 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             }
         }
 
+        if let Some(flexdir) = child.attribute("flexdir") {
+            use stretch::style::FlexDirection::{Column, ColumnReverse, Row, RowReverse};
+
+            if let Some(flexdir) = match flexdir {
+                "row" => Some(Row),
+                "column" => Some(Column),
+                "rowreverse" => Some(RowReverse),
+                "columnreverse" => Some(ColumnReverse),
+                _ => None,
+            } {
+                style.flex_direction = Some(flexdir);
+            } else {
+                log_bad_property!(flexdir);
+            }
+        }
+
+        if let Some(color) = child.attribute("color") {
+            if let Some(color) = try_parse_color(color) {
+                style.color = Some(color);
+            } else {
+                log_bad_property!(color);
+            }
+        }
+
         if child.tag_name().name() == "text" {
             let measured = measure_text(child_text.as_ref().unwrap(), None, style.font_size, 1.0);
             style.width = Some(Dimension::Points(measured.width));
@@ -146,14 +170,6 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
                 style.height = Some(height);
             } else {
                 log_bad_property!(height);
-            }
-        }
-
-        if let Some(color) = child.attribute("color") {
-            if let Some(color) = try_parse_color(color) {
-                style.color = Some(color);
-            } else {
-                log_bad_property!(color);
             }
         }
 

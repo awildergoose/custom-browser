@@ -23,6 +23,9 @@ pub fn compute_layout(capsule: &mut Capsule) {
             },
             align_items: s.align,
             justify_content: s.justify,
+            flex_direction: s
+                .flex_direction
+                .unwrap_or(stretch::style::FlexDirection::Row),
             ..Default::default()
         }
     }
@@ -50,25 +53,31 @@ pub fn compute_layout(capsule: &mut Capsule) {
         stretch: &Stretch,
         node: stretch::node::Node,
         child: &orx_concurrent_vec::ConcurrentElement<BoxedCapsuleObject>,
+        parent_abs_x: f32,
+        parent_abs_y: f32,
     ) {
         let layout = stretch.layout(node).unwrap();
+
+        let abs_x = parent_abs_x + layout.location.x;
+        let abs_y = parent_abs_y + layout.location.y;
 
         child.map(|c| {
             let binding = c.base();
             let mut computed = binding.computed_style.write();
             *computed = ComputedStyling {
-                x: layout.location.x,
-                y: layout.location.y,
+                x: abs_x,
+                y: abs_y,
                 width: layout.size.width,
                 height: layout.size.height,
             };
         });
 
-        let child_children = child.map(|c| c.base().children.clone());
+        let child_children: Arc<orx_concurrent_vec::ConcurrentVec<BoxedCapsuleObject>> =
+            child.map(|c| c.base().children.clone());
         let child_nodes = stretch.children(node).unwrap();
 
         for (child_node, ch) in child_nodes.into_iter().zip(child_children.iter()) {
-            apply_layout(stretch, child_node, ch);
+            apply_layout(stretch, child_node, ch, abs_x, abs_y);
         }
     }
 
@@ -101,6 +110,6 @@ pub fn compute_layout(capsule: &mut Capsule) {
 
     let root_child_nodes = stretch.children(root_node).unwrap();
     for (child_node, child) in root_child_nodes.into_iter().zip(root_base.children.iter()) {
-        apply_layout(&stretch, child_node, child);
+        apply_layout(&stretch, child_node, child, 0.0, 0.0);
     }
 }
