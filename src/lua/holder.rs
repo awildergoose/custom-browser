@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::capsule::{obj::CapsuleObject, parser::try_parse_dimension};
+use crate::{capsule::obj::CapsuleObject, layout::styling::StylingHandle};
 use mlua::{UserData, Value};
 
 #[derive(Debug, Clone)]
@@ -30,19 +30,9 @@ where
         Ok(Value::Table(table))
     });
 
-    fields.add_field_method_get("width", |lua, this: &T| {
-        let width = this.base().style.read().width;
-        if let Some(width) = width {
-            return Ok(Value::String(lua.create_string(width.as_text())?));
-        }
-
-        Ok(Value::Nil)
-    });
-
-    fields.add_field_method_set("width", |_lua, this: &mut T, v: String| {
-        this.base().style.write().width = try_parse_dimension(&v);
-        this.set_dirty();
-        Ok(())
+    fields.add_field_method_get("style", |lua, this: &T| {
+        let handle = StylingHandle(this.base().style.clone());
+        lua.create_userdata(handle)
     });
 }
 

@@ -27,11 +27,15 @@ pub trait CapsuleObject: Debug {
     }
 
     fn is_dirty(&self) -> bool {
-        *self.base().dirty.read()
+        self.base().style.read().is_dirty()
     }
 
     fn set_dirty(&self) {
-        *self.base().dirty.write() = true;
+        self.base().style.write().set_dirty();
+    }
+
+    fn set_non_dirty(&self) {
+        self.base().style.write().set_non_dirty();
     }
 }
 
@@ -41,7 +45,6 @@ pub struct CapsuleObjectBase {
     pub events: CapsuleObjectEvents,
     pub style: ArcLock<Styling>,
     pub computed_style: ArcLock<ComputedStyling>,
-    pub dirty: ArcLock<bool>,
 }
 
 #[derive(Debug, Default)]
@@ -74,7 +77,6 @@ impl CapsuleObjectBase {
             style: ctx.style,
             events: ctx.events,
             computed_style: Arc::default(),
-            dirty: RwLock::new(false).into(),
         })
     }
 

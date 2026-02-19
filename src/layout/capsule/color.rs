@@ -82,6 +82,12 @@ impl From<[f32; 4]> for COColor {
     }
 }
 
+fn f32_to_hex(v: f32) -> String {
+    let clamped = v.clamp(0.0, 1.0);
+    let byte = (clamped * 255.0).round() as u8;
+    format!("{:02X}", byte)
+}
+
 impl COColor {
     /// Creates a new `Color` with the given red, green, blue, and alpha components.
     /// Values are expected to be between 0.0 and 1.0.
@@ -156,6 +162,16 @@ impl COColor {
             b: self.b,
             a: self.a,
         }
+    }
+
+    pub fn as_str(&self) -> String {
+        format!(
+            "#{}{}{}{}",
+            f32_to_hex(self.r),
+            f32_to_hex(self.g),
+            f32_to_hex(self.b),
+            f32_to_hex(self.a)
+        )
     }
 }
 

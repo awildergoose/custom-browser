@@ -34,7 +34,9 @@ pub fn update_events(capsule: &ArcLock<Capsule>) {
         let mut lua = capsule_read.lua.write();
 
         for cb in callbacks {
-            lua.get_function(&cb).unwrap().call::<()>(()).unwrap();
+            if let Err(e) = lua.get_function(&cb).unwrap().call::<()>(()) {
+                log::error!("Lua error: {e}");
+            }
         }
 
         drop(lua);

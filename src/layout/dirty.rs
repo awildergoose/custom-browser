@@ -15,7 +15,7 @@ pub fn update_layout(capsule: &ArcLock<Capsule>) {
                 is_dirty = true;
 
                 e.map(|e| {
-                    *e.base().dirty.write() = false;
+                    e.set_non_dirty();
                 });
             }
         });
