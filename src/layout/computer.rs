@@ -5,26 +5,46 @@ use crate::{
     capsule::{
         Capsule,
         obj::{BoxedCapsuleObject, CapsuleObject},
+        objs::text::CSText,
     },
     layout::{
         capsule::{dimension::CODimension, flexdir::COFlexDirection},
         computed::ComputedStyling,
-        styling::Styling,
     },
 };
+use macroquad::text::measure_text;
 use stretch::{
     Stretch,
     geometry::Size,
     style::{Dimension, Style},
 };
 
+#[allow(clippy::too_many_lines)]
 pub fn compute_layout(capsule: &mut Capsule) {
-    fn styling_to_stretch(s: &Styling) -> Style {
-        Style {
-            size: stretch::geometry::Size {
-                width: s.width.unwrap_or(CODimension::Auto).as_stretch(),
-                height: s.height.unwrap_or(CODimension::Auto).as_stretch(),
+    fn styling_to_stretch(
+        child: &orx_concurrent_vec::ConcurrentElement<
+            Arc<dyn CapsuleObject + Send + Sync + 'static>,
+        >,
+    ) -> Style {
+        let binding = child.map(|c| c.base().style.clone());
+        let s = binding.read();
+        let text = child.map(|c| {
+            c.as_any()
+                .downcast_ref::<CSText>()
+                .map(|t| t.text.read().clone())
+        });
+        let mut width = s.width.unwrap_or(CODimension::Auto).as_stretch();
+        let height = text.map_or_else(
+            || s.height.unwrap_or(CODimension::Auto).as_stretch(),
+            |t| {
+                let measured = measure_text(&t, None, s.font_size, 1.0);
+                width = Dimension::Points(measured.width);
+                Dimension::Points(measured.height)
             },
+        );
+
+        Style {
+            size: stretch::geometry::Size { width, height },
             align_items: s.align.as_stretch(),
             justify_content: s.justify.as_stretch(),
             flex_direction: s
@@ -39,8 +59,7 @@ pub fn compute_layout(capsule: &mut Capsule) {
         stretch: &mut Stretch,
         child: &orx_concurrent_vec::ConcurrentElement<BoxedCapsuleObject>,
     ) -> stretch::node::Node {
-        let style_arc = child.map(|c| c.base().style.clone());
-        let node_style = styling_to_stretch(&style_arc.read());
+        let node_style = styling_to_stretch(child);
 
         let children_nodes: Vec<_> = {
             let child_children: Arc<orx_concurrent_vec::ConcurrentVec<BoxedCapsuleObject>> =

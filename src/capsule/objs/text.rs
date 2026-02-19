@@ -25,7 +25,6 @@ impl CSText {
 
     pub fn set_text(&self, text: String) {
         *self.text.write() = text;
-        // This doesn't work?
         self.base.style.write().set_dirty();
     }
 }

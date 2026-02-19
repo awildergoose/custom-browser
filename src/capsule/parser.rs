@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use macroquad::text::measure_text;
 use orx_concurrent_vec::ConcurrentVec;
 use parking_lot::RwLock;
 use roxmltree::Node;
@@ -150,12 +149,6 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             } else {
                 log_bad_property!(color);
             }
-        }
-
-        if child.tag_name().name() == "text" {
-            let measured = measure_text(child_text.as_ref().unwrap(), None, style.font_size, 1.0);
-            style.width = Some(CODimension::Points(measured.width));
-            style.height = Some(CODimension::Points(measured.height));
         }
 
         if let Some(width) = child.attribute("width") {
