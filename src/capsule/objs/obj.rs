@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use macroquad::shapes::draw_rectangle;
+
 use crate::{
     capsule::obj::{CapsuleObject, CapsuleObjectBase, CapsuleObjectChildren},
     layout::styling::Styling,
@@ -25,5 +27,11 @@ impl CapsuleObject for CSObj {
         self.base.clone()
     }
 
-    fn render(&self) {}
+    fn render(&self) {
+        let style = self.base.computed_style.read();
+
+        if let Some(color) = self.base.style.color {
+            draw_rectangle(style.x, style.y, style.width, style.height, color);
+        }
+    }
 }

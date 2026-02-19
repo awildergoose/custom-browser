@@ -1,4 +1,4 @@
-use macroquad::color::{Color, WHITE};
+use macroquad::color::Color;
 use stretch::style::{AlignItems, Dimension, JustifyContent};
 
 use crate::renderer::constants::DEFAULT_TEXT_SIZE;
@@ -10,7 +10,7 @@ pub struct Styling {
     pub width: Option<Dimension>,
     pub height: Option<Dimension>,
     pub font_size: u16,
-    pub color: Color,
+    pub color: Option<Color>,
 }
 
 impl Default for Styling {
@@ -21,7 +21,7 @@ impl Default for Styling {
             width: None,
             height: None,
             font_size: DEFAULT_TEXT_SIZE,
-            color: WHITE,
+            color: None,
         }
     }
 }

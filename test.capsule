@@ -3,8 +3,14 @@
         <title>test capsule</title>
     </meta>
     <view>
-        <text align="center">hello, world!</text>
+        <obj justify="spacebetween">
+            <text>hello, world!</text>
+            <obj width="50%" height="20" color="green" />
+            <text color="#ff00008f">hello, world! b2</text>
+        </obj>
+        <text>isnt this so cool!</text>
         <br />
-        <text justify="center" align="center" color="#ff00008f">hello, world! b2</text>
+        <br />
+        <text>new lines!</text>
     </view>
 </capsule>

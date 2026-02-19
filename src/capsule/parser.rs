@@ -10,6 +10,7 @@ use crate::{
         objs::{obj::CSObj, text::CSText},
     },
     layout::styling::Styling,
+    renderer::constants::BR_LINE_HEIGHT,
 };
 
 macro_rules! log_bad_property {
@@ -71,8 +72,7 @@ fn parse_capsule_meta(child: Node) -> CapsuleMeta {
 #[allow(clippy::too_many_lines)]
 fn parse_capsule_view(view: Node) -> CapsuleView {
     fn parse_child(child: Node) -> Option<BoxedCapsuleObject> {
-        if child.is_text() {
-            log::trace!("text, not parsing");
+        if child.is_text() || child.is_comment() {
             return None;
         }
 
@@ -129,8 +129,8 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
 
         if child.tag_name().name() == "text" {
             let measured = measure_text(child_text.as_ref().unwrap(), None, style.font_size, 1.0);
-            style.width = Some(stretch::style::Dimension::Points(measured.width));
-            style.height = Some(stretch::style::Dimension::Points(measured.height));
+            style.width = Some(Dimension::Points(measured.width));
+            style.height = Some(Dimension::Points(measured.height));
         }
 
         if let Some(width) = child.attribute("width") {
@@ -151,7 +151,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
 
         if let Some(color) = child.attribute("color") {
             if let Some(color) = try_parse_color(color) {
-                style.color = color;
+                style.color = Some(color);
             } else {
                 log_bad_property!(color);
             }
@@ -169,9 +169,8 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             ))),
             "obj" => Some(Box::new(CSObj::new(children, style_arc))),
             "br" => {
-                let line_height = 16.0;
-                style_clone.height = Some(Dimension::Points(line_height));
                 style_clone.width = Some(Dimension::Points(0.0));
+                style_clone.height = Some(Dimension::Points(BR_LINE_HEIGHT));
 
                 Some(Box::new(CSObj::new(
                     ConcurrentVec::new().into(),

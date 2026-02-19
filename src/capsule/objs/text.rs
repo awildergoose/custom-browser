@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use macroquad::color::WHITE;
+
 use crate::{
     capsule::obj::{CapsuleObject, CapsuleObjectBase, CapsuleObjectChildren},
     layout::styling::Styling,
@@ -34,7 +36,7 @@ impl CapsuleObject for CSText {
             computed.x,
             computed.y,
             self.base.style.font_size.into(),
-            self.base.style.color,
+            self.base.style.color.unwrap_or(WHITE),
         );
     }
 }
