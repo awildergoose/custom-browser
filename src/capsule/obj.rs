@@ -4,7 +4,7 @@ use orx_concurrent_vec::ConcurrentVec;
 use parking_lot::RwLock;
 
 use crate::{
-    capsule::objs::script::CSScript,
+    capsule::objs::{script::CSScript, view::CapsuleView},
     layout::{computed::ComputedStyling, styling::Styling},
     lua::engine::LuaEngine,
 };
@@ -59,18 +59,4 @@ impl Capsule {
             self.lua.start();
         }
     }
-}
-
-// view
-#[derive(Debug, Default)]
-pub struct CapsuleView {
-    base: Arc<CapsuleObjectBase>,
-}
-
-impl CapsuleObject for CapsuleView {
-    fn base(&self) -> Arc<CapsuleObjectBase> {
-        self.base.clone()
-    }
-
-    fn render(&self) {}
 }

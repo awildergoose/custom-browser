@@ -6,8 +6,8 @@ use stretch::style::Dimension;
 use crate::{
     capsule::{
         Capsule,
-        obj::{BoxedCapsuleObject, CapsuleMeta, CapsuleObject, CapsuleView},
-        objs::{obj::CSObj, script::CSScript, text::CSText},
+        obj::{BoxedCapsuleObject, CapsuleMeta, CapsuleObject},
+        objs::{obj::CSObj, script::CSScript, text::CSText, view::CapsuleView},
     },
     layout::styling::Styling,
     renderer::constants::BR_LINE_HEIGHT,

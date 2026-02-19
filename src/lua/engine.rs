@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use mlua::{Lua, StdLib};
+use mlua::{FromLuaMulti, IntoLuaMulti, Lua, StdLib};
 
 use crate::lua::modules::get_capsule_module;
 
@@ -21,11 +21,10 @@ impl LuaEngine {
     }
 
     pub fn start(&mut self) {
-        let code = self.code.clone();
-        let lua = self.lua.clone();
+        self.lua.load(self.code.clone()).exec().unwrap();
+    }
 
-        std::thread::spawn(move || {
-            lua.load(code.clone()).exec().unwrap();
-        });
+    pub fn call<R: FromLuaMulti>(&mut self, fun: impl IntoLuaMulti) -> mlua::Result<R> {
+        self.lua.load(self.code.clone()).call::<R>(fun)
     }
 }
