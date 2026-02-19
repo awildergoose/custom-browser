@@ -15,3 +15,5 @@ parse-color = "0.1.2"
 roxmltree = "0.21.1"
 serde = { version = "1.0.228", features = ["derive"] }
 stretch = "0.3.2"
+strum = { version = "0.27.2", features = ["derive"] }
+strum_macros = "0.27.2"

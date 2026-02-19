@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
-use macroquad::{color::Color, text::measure_text};
+use macroquad::text::measure_text;
 use orx_concurrent_vec::ConcurrentVec;
 use parking_lot::RwLock;
 use roxmltree::Node;
-use stretch::style::Dimension;
 
 use crate::{
     capsule::{
@@ -13,7 +12,13 @@ use crate::{
         objs::{obj::CSObj, script::CSScript, text::CSText, view::CapsuleView},
     },
     event::CapsuleObjectEvent,
-    layout::styling::Styling,
+    layout::{
+        capsule::{
+            align::COAlignItems, color::COColor, dimension::CODimension, flexdir::COFlexDirection,
+            justify::COJustifyContent,
+        },
+        styling::Styling,
+    },
     renderer::constants::BR_LINE_HEIGHT,
 };
 
@@ -25,9 +30,9 @@ macro_rules! log_bad_property {
 }
 
 #[must_use]
-pub fn try_parse_color(color: &str) -> Option<Color> {
+pub fn try_parse_color(color: &str) -> Option<COColor> {
     if let Some([r, g, b, a]) = parse_color::parse(color) {
-        return Some(Color::from_rgba(r, g, b, a));
+        return Some(COColor::from_rgba(r, g, b, a));
     }
 
     let color = color.strip_prefix("0x").unwrap_or(color);
@@ -46,18 +51,22 @@ pub fn try_parse_color(color: &str) -> Option<Color> {
         255
     };
 
-    Some(Color::from_rgba(r, g, b, a))
+    Some(COColor::from_rgba(r, g, b, a))
 }
 
 #[must_use]
-pub fn try_parse_dimension(text: &str) -> Option<Dimension> {
-    if text.ends_with('%') {
-        return Some(Dimension::Percent(
+pub fn try_parse_dimension(text: &str) -> Option<CODimension> {
+    if text == "auto" {
+        return Some(CODimension::Auto);
+    } else if text == "undefined" {
+        return Some(CODimension::Undefined);
+    } else if text.ends_with('%') {
+        return Some(CODimension::Percent(
             text.strip_suffix("%").unwrap().parse::<f32>().ok()? / 100.0,
         ));
     }
 
-    Some(Dimension::Points(text.parse::<f32>().ok()?))
+    Some(CODimension::Points(text.parse::<f32>().ok()?))
 }
 
 #[must_use]
@@ -112,16 +121,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         let mut style = Styling::default();
 
         if let Some(align) = child.attribute("align") {
-            use stretch::style::AlignItems::{Baseline, Center, FlexEnd, FlexStart, Stretch};
-
-            if let Some(align) = match align {
-                "flexstart" => Some(FlexStart),
-                "flexend" => Some(FlexEnd),
-                "center" => Some(Center),
-                "baseline" => Some(Baseline),
-                "stretch" => Some(Stretch),
-                _ => None,
-            } {
+            if let Ok(align) = align.parse::<COAlignItems>() {
                 style.align = align;
             } else {
                 log_bad_property!(align);
@@ -129,19 +129,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         }
 
         if let Some(justify) = child.attribute("justify") {
-            use stretch::style::JustifyContent::{
-                Center, FlexEnd, FlexStart, SpaceAround, SpaceBetween, SpaceEvenly,
-            };
-
-            if let Some(justify) = match justify {
-                "flexstart" => Some(FlexStart),
-                "flexend" => Some(FlexEnd),
-                "center" => Some(Center),
-                "spacebetween" => Some(SpaceBetween),
-                "spacearound" => Some(SpaceAround),
-                "spaceevenly" => Some(SpaceEvenly),
-                _ => None,
-            } {
+            if let Ok(justify) = justify.parse::<COJustifyContent>() {
                 style.justify = justify;
             } else {
                 log_bad_property!(justify);
@@ -149,15 +137,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         }
 
         if let Some(flexdir) = child.attribute("flexdir") {
-            use stretch::style::FlexDirection::{Column, ColumnReverse, Row, RowReverse};
-
-            if let Some(flexdir) = match flexdir {
-                "row" => Some(Row),
-                "column" => Some(Column),
-                "rowreverse" => Some(RowReverse),
-                "columnreverse" => Some(ColumnReverse),
-                _ => None,
-            } {
+            if let Ok(flexdir) = flexdir.parse::<COFlexDirection>() {
                 style.flex_direction = Some(flexdir);
             } else {
                 log_bad_property!(flexdir);
@@ -174,8 +154,8 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
 
         if child.tag_name().name() == "text" {
             let measured = measure_text(child_text.as_ref().unwrap(), None, style.font_size, 1.0);
-            style.width = Some(Dimension::Points(measured.width));
-            style.height = Some(Dimension::Points(measured.height));
+            style.width = Some(CODimension::Points(measured.width));
+            style.height = Some(CODimension::Points(measured.height));
         }
 
         if let Some(width) = child.attribute("width") {
@@ -215,8 +195,8 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             ))),
             "obj" => Some(Arc::new(CSObj::new(ctx))),
             "br" => {
-                style_clone.width = Some(Dimension::Points(0.0));
-                style_clone.height = Some(Dimension::Points(BR_LINE_HEIGHT));
+                style_clone.width = Some(CODimension::Points(0.0));
+                style_clone.height = Some(CODimension::Points(BR_LINE_HEIGHT));
                 ctx.style = RwLock::new(style_clone).into();
 
                 Some(Arc::new(CSObj::new(ctx)))

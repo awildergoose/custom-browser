@@ -34,7 +34,7 @@ impl CapsuleObject for CSObj {
                 computed_style.y,
                 computed_style.width,
                 computed_style.height,
-                color,
+                color.as_macroquad(),
             );
         }
     }

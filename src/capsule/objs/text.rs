@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
-use macroquad::color::WHITE;
-
 use crate::{
     capsule::obj::{CapsuleObject, CapsuleObjectBase, CapsuleObjectCreationContext},
+    layout::capsule::color::WHITE,
     renderer::text::draw_text_top_left,
 };
 
@@ -36,7 +35,7 @@ impl CapsuleObject for CSText {
             computed.x,
             computed.y,
             style.font_size.into(),
-            style.color.unwrap_or(WHITE),
+            style.color.unwrap_or(WHITE).as_macroquad(),
         );
     }
 }

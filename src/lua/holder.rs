@@ -30,11 +30,13 @@ where
         Ok(Value::Table(table))
     });
 
-    fields.add_field_method_get("width", |_lua, this: &T| {
-        // TODO: Value::String style
-        Ok(Value::Number(
-            this.base().computed_style.read().width.into(),
-        ))
+    fields.add_field_method_get("width", |lua, this: &T| {
+        let width = this.base().style.read().width;
+        if let Some(width) = width {
+            return Ok(Value::String(lua.create_string(width.as_text())?));
+        }
+
+        Ok(Value::Nil)
     });
 
     fields.add_field_method_set("width", |_lua, this: &mut T, v: String| {

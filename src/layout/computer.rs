@@ -6,7 +6,11 @@ use crate::{
         Capsule,
         obj::{BoxedCapsuleObject, CapsuleObject},
     },
-    layout::{computed::ComputedStyling, styling::Styling},
+    layout::{
+        capsule::{dimension::CODimension, flexdir::COFlexDirection},
+        computed::ComputedStyling,
+        styling::Styling,
+    },
 };
 use stretch::{
     Stretch,
@@ -18,14 +22,15 @@ pub fn compute_layout(capsule: &mut Capsule) {
     fn styling_to_stretch(s: &Styling) -> Style {
         Style {
             size: stretch::geometry::Size {
-                width: s.width.unwrap_or(stretch::style::Dimension::Auto),
-                height: s.height.unwrap_or(stretch::style::Dimension::Auto),
+                width: s.width.unwrap_or(CODimension::Auto).as_stretch(),
+                height: s.height.unwrap_or(CODimension::Auto).as_stretch(),
             },
-            align_items: s.align,
-            justify_content: s.justify,
+            align_items: s.align.as_stretch(),
+            justify_content: s.justify.as_stretch(),
             flex_direction: s
                 .flex_direction
-                .unwrap_or(stretch::style::FlexDirection::Row),
+                .unwrap_or(COFlexDirection::Row)
+                .as_stretch(),
             ..Default::default()
         }
     }

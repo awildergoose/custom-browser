@@ -5,19 +5,19 @@
             function onclick()
             print(`mem usage: {capsule.used_memory()}`)
             capsule.root().children[1].children[2].width = `{math.random(1, 100)}%`
+            print(capsule.root().children[1].children[2].width)
             end
 
-            print(capsule.root().children[1].width)
-            print(capsule.root().children[1].children[1].width)
+            print(capsule.root().children[1].children[2].width)
         </script>
     </meta>
     <view>
-        <obj justify="spacebetween" onclick="onclick">
+        <obj justify="space_between" onclick="onclick">
             <text>hello, world!</text>
             <obj width="50%" height="20" color="green" />
             <text color="#ff00008f">hello, world! b5</text>
         </obj>
-        <obj align="center" justify="flexstart" flexdir="column">
+        <obj align="center" justify="flex_start" flexdir="column">
             <text>ahello world but cooler!</text>
             <obj width="41.5%" height="20" color="red" />
             <text color="#ff00008f">hello, world! b2</text>
