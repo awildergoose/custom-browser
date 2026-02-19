@@ -31,12 +31,14 @@ async fn main() {
         .filter_level(log::LevelFilter::Debug)
         .init();
 
-    let mut capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap());
+    let mut capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap())
+        .expect("failed to parse capsule");
     compute_layout(&mut capsule);
 
     loop {
         if is_key_pressed(KeyCode::F5) {
-            capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap());
+            capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap())
+                .expect("failed to parse capsule");
             compute_layout(&mut capsule);
             log::info!("Reloaded!");
         }

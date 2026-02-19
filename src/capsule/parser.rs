@@ -12,8 +12,19 @@ use crate::{
     layout::styling::Styling,
 };
 
+macro_rules! log_bad_property {
+    ($name:expr) => {
+        let _tt = stringify!($name);
+        log::warn!("bad {_tt} property: '{}'", $name);
+    };
+}
+
 #[must_use]
 fn try_parse_color(color: &str) -> Option<Color> {
+    if let Some([r, g, b, a]) = parse_color::parse(color) {
+        return Some(Color::from_rgba(r, g, b, a));
+    }
+
     let color = color.strip_prefix("0x").unwrap_or(color);
     let color = color.strip_prefix("#").unwrap_or(color);
 
@@ -82,14 +93,18 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         if let Some(align) = child.attribute("align") {
             use stretch::style::AlignItems::{Baseline, Center, FlexEnd, FlexStart, Stretch};
 
-            style.align = match align {
-                "flexstart" => FlexStart,
-                "flexend" => FlexEnd,
-                "center" => Center,
-                "baseline" => Baseline,
-                "stretch" => Stretch,
-                _ => panic!("bad align property: {align}"),
-            };
+            if let Some(align) = match align {
+                "flexstart" => Some(FlexStart),
+                "flexend" => Some(FlexEnd),
+                "center" => Some(Center),
+                "baseline" => Some(Baseline),
+                "stretch" => Some(Stretch),
+                _ => None,
+            } {
+                style.align = align;
+            } else {
+                log_bad_property!(align);
+            }
         }
 
         if let Some(justify) = child.attribute("justify") {
@@ -97,15 +112,19 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
                 Center, FlexEnd, FlexStart, SpaceAround, SpaceBetween, SpaceEvenly,
             };
 
-            style.justify = match justify {
-                "flexstart" => FlexStart,
-                "flexend" => FlexEnd,
-                "center" => Center,
-                "spacebetween" => SpaceBetween,
-                "spacearound" => SpaceAround,
-                "spaceevenly" => SpaceEvenly,
-                _ => panic!("bad justify property: {justify}"),
-            };
+            if let Some(justify) = match justify {
+                "flexstart" => Some(FlexStart),
+                "flexend" => Some(FlexEnd),
+                "center" => Some(Center),
+                "spacebetween" => Some(SpaceBetween),
+                "spacearound" => Some(SpaceAround),
+                "spaceevenly" => Some(SpaceEvenly),
+                _ => None,
+            } {
+                style.justify = justify;
+            } else {
+                log_bad_property!(justify);
+            }
         }
 
         if child.tag_name().name() == "text" {
@@ -118,7 +137,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             if let Some(width) = try_parse_dimension(width) {
                 style.width = Some(width);
             } else {
-                log::warn!("bad width property: '{width}'");
+                log_bad_property!(width);
             }
         }
 
@@ -126,39 +145,44 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             if let Some(height) = try_parse_dimension(height) {
                 style.height = Some(height);
             } else {
-                log::warn!("bad height property: '{height}'");
+                log_bad_property!(height);
             }
         }
 
         if let Some(color) = child.attribute("color") {
-            style.color = parse_color::parse(color)
-                .map_or_else(
-                    || try_parse_color(color),
-                    |[r, g, b, a]| Some(Color::new(r.into(), g.into(), b.into(), a.into())),
-                )
-                .unwrap();
+            if let Some(color) = try_parse_color(color) {
+                style.color = color;
+            } else {
+                log_bad_property!(color);
+            }
         }
 
         let children = children.into();
         let mut style_clone = style.clone();
         let style_arc = style.into();
 
-        Some(match tag_name {
-            "text" => Box::new(CSText::new(
+        match tag_name {
+            "text" => Some(Box::new(CSText::new(
                 child_text.as_ref().unwrap().clone(),
                 children,
                 style_arc,
-            )),
-            "obj" => Box::new(CSObj::new(children, style_arc)),
+            ))),
+            "obj" => Some(Box::new(CSObj::new(children, style_arc))),
             "br" => {
                 let line_height = 16.0;
                 style_clone.height = Some(Dimension::Points(line_height));
                 style_clone.width = Some(Dimension::Points(0.0));
 
-                Box::new(CSObj::new(ConcurrentVec::new().into(), style_clone.into()))
+                Some(Box::new(CSObj::new(
+                    ConcurrentVec::new().into(),
+                    style_clone.into(),
+                )))
             }
-            _ => panic!("unknown node type: '{tag_name}'"),
-        })
+            _ => {
+                log::warn!("unknown node type: '{tag_name}'");
+                None
+            }
+        }
     }
 
     let out = CapsuleView::default();
@@ -174,10 +198,9 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
     out
 }
 
-#[must_use]
-pub fn parse_capsule(text: &str) -> Capsule {
+pub fn parse_capsule(text: &str) -> anyhow::Result<Capsule> {
     let mut capsule = Capsule::default();
-    let xml_document = roxmltree::Document::parse(text).unwrap();
+    let xml_document = roxmltree::Document::parse(text)?;
 
     assert_eq!(xml_document.root_element().tag_name().name(), "capsule");
 
@@ -197,5 +220,5 @@ pub fn parse_capsule(text: &str) -> Capsule {
         }
     }
 
-    capsule
+    Ok(capsule)
 }
