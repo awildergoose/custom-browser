@@ -1,0 +1,8 @@
+<capsule>
+    <meta>
+        <title>test capsule</title>
+    </meta>
+    <view>
+        <text align="center">hello, world!</text>
+    </view>
+</capsule>

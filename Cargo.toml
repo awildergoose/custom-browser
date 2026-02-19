@@ -1,0 +1,14 @@
+[package]
+name = "custom-browser"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.101"
+env_logger = "0.11.9"
+log = "0.4.29"
+macroquad = "0.4.14"
+orx-concurrent-vec = "3.10.0"
+parking_lot = { version = "0.12.5", features = ["deadlock_detection"] }
+roxmltree = "0.21.1"
+stretch = "0.3.2"
