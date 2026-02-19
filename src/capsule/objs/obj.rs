@@ -2,10 +2,7 @@ use std::sync::Arc;
 
 use macroquad::shapes::draw_rectangle;
 
-use crate::{
-    capsule::obj::{CapsuleObject, CapsuleObjectBase, CapsuleObjectChildren, CapsuleObjectEvents},
-    layout::styling::Styling,
-};
+use crate::capsule::obj::{CapsuleObject, CapsuleObjectBase, CapsuleObjectCreationContext};
 
 // like a div
 #[derive(Debug, Default)]
@@ -15,13 +12,9 @@ pub struct CSObj {
 
 impl CSObj {
     #[must_use]
-    pub fn new(
-        children: CapsuleObjectChildren,
-        style: Arc<Styling>,
-        events: CapsuleObjectEvents,
-    ) -> Self {
+    pub fn new(ctx: CapsuleObjectCreationContext) -> Self {
         Self {
-            base: CapsuleObjectBase::new(children, style, events),
+            base: CapsuleObjectBase::new(ctx),
         }
     }
 }

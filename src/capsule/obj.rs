@@ -34,16 +34,35 @@ pub struct CapsuleObjectBase {
     pub computed_style: Arc<RwLock<ComputedStyling>>,
 }
 
-impl CapsuleObjectBase {
+#[derive(Debug, Default)]
+pub struct CapsuleObjectCreationContext {
+    pub children: CapsuleObjectChildren,
+    pub events: CapsuleObjectEvents,
+    pub style: Arc<Styling>,
+}
+
+impl CapsuleObjectCreationContext {
+    #[must_use]
     pub fn new(
         children: CapsuleObjectChildren,
-        style: Arc<Styling>,
         events: CapsuleObjectEvents,
-    ) -> Arc<Self> {
-        Arc::new(Self {
+        style: Arc<Styling>,
+    ) -> Self {
+        Self {
             children,
-            style,
             events,
+            style,
+        }
+    }
+}
+
+impl CapsuleObjectBase {
+    #[must_use]
+    pub fn new(ctx: CapsuleObjectCreationContext) -> Arc<Self> {
+        Arc::new(Self {
+            children: ctx.children,
+            style: ctx.style,
+            events: ctx.events,
             computed_style: Arc::default(),
         })
     }

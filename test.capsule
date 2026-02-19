@@ -3,11 +3,10 @@
         <title>test capsule</title>
         <script>
             function onclick()
-            print("clicked!")
+            print(`mem usage: {capsule.used_memory()}`)
             end
 
             print("init capsule script!")
-            print(`mem usage: {capsule.used_memory()}`)
         </script>
     </meta>
     <view>

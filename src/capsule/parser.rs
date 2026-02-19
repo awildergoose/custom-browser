@@ -6,7 +6,7 @@ use stretch::style::Dimension;
 use crate::{
     capsule::{
         Capsule,
-        obj::{BoxedCapsuleObject, CapsuleMeta, CapsuleObject},
+        obj::{BoxedCapsuleObject, CapsuleMeta, CapsuleObject, CapsuleObjectCreationContext},
         objs::{obj::CSObj, script::CSScript, text::CSText, view::CapsuleView},
     },
     event::CapsuleObjectEvent,
@@ -197,28 +197,26 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             events.push(CapsuleObjectEvent::new("onclick", onclick));
         }
 
-        let children = children.into();
         let mut style_clone = style.clone();
+
+        let children_arc = children.into();
         let style_arc = style.into();
         let events_arc = events.into();
+
+        let mut ctx = CapsuleObjectCreationContext::new(children_arc, events_arc, style_arc);
 
         match tag_name {
             "text" => Some(Box::new(CSText::new(
                 child_text.as_ref().unwrap().clone(),
-                children,
-                style_arc,
-                events_arc,
+                ctx,
             ))),
-            "obj" => Some(Box::new(CSObj::new(children, style_arc, events_arc))),
+            "obj" => Some(Box::new(CSObj::new(ctx))),
             "br" => {
                 style_clone.width = Some(Dimension::Points(0.0));
                 style_clone.height = Some(Dimension::Points(BR_LINE_HEIGHT));
+                ctx.style = style_clone.into();
 
-                Some(Box::new(CSObj::new(
-                    ConcurrentVec::new().into(),
-                    style_clone.into(),
-                    events_arc,
-                )))
+                Some(Box::new(CSObj::new(ctx)))
             }
             "script" => Some(Box::new(CSScript::new(
                 child_text.as_ref().unwrap().clone(),
