@@ -11,7 +11,7 @@
         </script>
     </meta>
     <view>
-        <obj justify="spacebetween">
+        <obj justify="spacebetween" onclick="onclick">
             <text>hello, world!</text>
             <obj width="50%" height="20" color="green" />
             <text color="#ff00008f">hello, world! b5</text>

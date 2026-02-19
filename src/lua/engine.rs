@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use mlua::{FromLuaMulti, IntoLuaMulti, Lua, StdLib};
+use mlua::{Function, Lua, StdLib};
 
 use crate::lua::modules::get_capsule_module;
 
@@ -24,7 +24,7 @@ impl LuaEngine {
         self.lua.load(self.code.clone()).exec().unwrap();
     }
 
-    pub fn call<R: FromLuaMulti>(&mut self, fun: impl IntoLuaMulti) -> mlua::Result<R> {
-        self.lua.load(self.code.clone()).call::<R>(fun)
+    pub fn get_function(&mut self, name: &str) -> mlua::Result<Function> {
+        self.lua.globals().get(name)
     }
 }

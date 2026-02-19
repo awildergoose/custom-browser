@@ -5,11 +5,12 @@
 use macroquad::prelude::*;
 
 use crate::{
-    capsule::parser::parse_capsule, layout::computer::compute_layout,
+    capsule::parser::parse_capsule, event::update::update_events, layout::computer::compute_layout,
     renderer::full::render_capsule,
 };
 
 pub mod capsule;
+pub mod event;
 pub mod layout;
 pub mod lua;
 pub mod renderer;
@@ -46,6 +47,7 @@ async fn main() {
             log::info!("Reloaded!");
         }
 
+        update_events(&mut capsule);
         clear_background(BLACK);
         render_capsule(&capsule);
         next_frame().await;

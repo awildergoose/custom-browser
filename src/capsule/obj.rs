@@ -5,12 +5,14 @@ use parking_lot::RwLock;
 
 use crate::{
     capsule::objs::{script::CSScript, view::CapsuleView},
+    event::CapsuleObjectEvent,
     layout::{computed::ComputedStyling, styling::Styling},
     lua::engine::LuaEngine,
 };
 
 pub type BoxedCapsuleObject = Box<dyn CapsuleObject + Sync + Send>;
 pub type CapsuleObjectChildren = Arc<ConcurrentVec<BoxedCapsuleObject>>;
+pub type CapsuleObjectEvents = Arc<ConcurrentVec<CapsuleObjectEvent>>;
 
 pub trait CapsuleObject: Debug {
     fn base(&self) -> Arc<CapsuleObjectBase>;
@@ -20,6 +22,7 @@ pub trait CapsuleObject: Debug {
 #[derive(Debug, Default, Clone)]
 pub struct CapsuleObjectBase {
     pub children: CapsuleObjectChildren,
+    pub events: CapsuleObjectEvents,
     pub style: Arc<Styling>,
     pub computed_style: Arc<RwLock<ComputedStyling>>,
 }
@@ -58,5 +61,11 @@ impl Capsule {
             self.lua.init(&script.code);
             self.lua.start();
         }
+
+        // self.lua
+        //     .get_function("onclick")
+        //     .unwrap()
+        //     .call::<()>(())
+        //     .unwrap();
     }
 }
