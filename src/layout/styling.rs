@@ -72,99 +72,83 @@ impl StylingHandle {
     }
 }
 
-impl UserData for StylingHandle {
-    fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-        // TODO: these will all deadlock rn
-        fields.add_field_method_get("width", |lua, this| {
-            let width = this.0.read().width;
-            if let Some(width) = width {
-                return Ok(Value::String(lua.create_string(width.as_text())?));
+macro_rules! impl_setget_dimension {
+    ($fields: ident, $name: ident) => {
+        $fields.add_field_method_get(stringify!($name), |lua, this| {
+            let value = this.0.read().$name;
+            if let Some(value) = value {
+                return Ok(Value::String(lua.create_string(value.as_text())?));
             }
 
             Ok(Value::Nil)
         });
 
-        fields.add_field_method_set("width", |_lua, this, v: String| {
-            this.0.write().width = try_parse_dimension(&v);
+        $fields.add_field_method_set(stringify!($name), |_lua, this, v: String| {
+            this.0.write().$name = try_parse_dimension(&v);
             this.0.write().set_dirty();
             Ok(())
         });
+    };
+}
 
-        fields.add_field_method_get("height", |lua, this| {
-            let height = this.0.read().height;
-            if let Some(height) = height {
-                return Ok(Value::String(lua.create_string(height.as_text())?));
+macro_rules! impl_setget_enum {
+    ($fields: ident, $name: ident, $type: tt) => {
+        $fields.add_field_method_get(stringify!($name), |lua, this| {
+            Ok(Value::String(
+                lua.create_string(this.0.read().$name.as_ref())?,
+            ))
+        });
+
+        $fields.add_field_method_set(stringify!($name), |_lua, this, v: String| {
+            let value = v
+                .parse::<$type>()
+                .context(format!("failed to parse {}", stringify!($name)))?;
+            this.write().$name = value;
+            Ok(())
+        });
+    };
+}
+
+macro_rules! impl_setget_primitive {
+    ($fields: ident, $name: ident, $type: tt, $lua_type: tt) => {
+        $fields.add_field_method_get(stringify!($name), |_lua, this| {
+            Ok(Value::$lua_type(this.0.read().$name.into()))
+        });
+
+        $fields.add_field_method_set(stringify!($name), |_lua, this, v: $type| {
+            this.write().$name = v;
+            Ok(())
+        });
+    };
+}
+
+macro_rules! impl_setget_color {
+    ($fields: ident, $name: ident) => {
+        $fields.add_field_method_get(stringify!($name), |lua, this| {
+            let value = this.0.read().$name;
+            if let Some(value) = value {
+                return Ok(Value::String(lua.create_string(value.as_str())?));
             }
 
             Ok(Value::Nil)
         });
 
-        fields.add_field_method_set("height", |_lua, this, v: String| {
-            this.write().height = try_parse_dimension(&v);
+        $fields.add_field_method_set(stringify!($name), |_lua, this, color: String| {
+            this.write().$name = try_parse_color(&color);
             Ok(())
         });
+    };
+}
 
-        fields.add_field_method_get("align", |lua, this| {
-            Ok(Value::String(
-                lua.create_string(this.0.read().align.as_ref())?,
-            ))
-        });
-
-        fields.add_field_method_set("align", |_lua, this, v: String| {
-            let align = v.parse::<COAlignItems>().context("failed to parse align")?;
-            this.write().align = align;
-            Ok(())
-        });
-
-        fields.add_field_method_get("justify", |lua, this| {
-            Ok(Value::String(
-                lua.create_string(this.0.read().justify.as_ref())?,
-            ))
-        });
-
-        fields.add_field_method_set("justify", |_lua, this, v: String| {
-            let justify = v
-                .parse::<COJustifyContent>()
-                .context("failed to parse justify")?;
-            this.write().justify = justify;
-            Ok(())
-        });
-
-        fields.add_field_method_get("font_size", |_lua, this| {
-            Ok(Value::Number(this.0.read().font_size.into()))
-        });
-
-        fields.add_field_method_set("font_size", |_lua, this, v: u16| {
-            this.write().font_size = v;
-            Ok(())
-        });
-
-        fields.add_field_method_get("color", |lua, this| {
-            let color = this.0.read().color;
-            if let Some(color) = color {
-                return Ok(Value::String(lua.create_string(color.as_str())?));
-            }
-
-            Ok(Value::Nil)
-        });
-
-        fields.add_field_method_set("color", |_lua, this, color: String| {
-            this.write().color = try_parse_color(&color);
-            Ok(())
-        });
-
-        fields.add_field_method_get("flexdir", |lua, this| {
-            Ok(Value::String(
-                lua.create_string(this.0.read().flexdir.as_ref())?,
-            ))
-        });
-
-        fields.add_field_method_set("flexdir", |_lua, this, v: String| {
-            let flexdir = v
-                .parse::<COFlexDirection>()
-                .context("failed to parse flexdir")?;
-            this.write().flexdir = flexdir;
-            Ok(())
-        });
+impl UserData for StylingHandle {
+    fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+        impl_setget_dimension!(fields, width);
+        impl_setget_dimension!(fields, height);
+        impl_setget_enum!(fields, align, COAlignItems);
+        impl_setget_enum!(fields, justify, COJustifyContent);
+        impl_setget_enum!(fields, flexdir, COFlexDirection);
+        impl_setget_primitive!(fields, font_size, u16, Number);
+        impl_setget_color!(fields, color);
+        impl_setget_color!(fields, background_color);
     }
 }
