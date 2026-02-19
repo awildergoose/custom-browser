@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use macroquad::{color::Color, text::measure_text};
 use orx_concurrent_vec::ConcurrentVec;
 use roxmltree::Node;
@@ -206,19 +208,19 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         let mut ctx = CapsuleObjectCreationContext::new(children_arc, events_arc, style_arc);
 
         match tag_name {
-            "text" => Some(Box::new(CSText::new(
+            "text" => Some(Arc::new(CSText::new(
                 child_text.as_ref().unwrap().clone(),
                 ctx,
             ))),
-            "obj" => Some(Box::new(CSObj::new(ctx))),
+            "obj" => Some(Arc::new(CSObj::new(ctx))),
             "br" => {
                 style_clone.width = Some(Dimension::Points(0.0));
                 style_clone.height = Some(Dimension::Points(BR_LINE_HEIGHT));
                 ctx.style = style_clone.into();
 
-                Some(Box::new(CSObj::new(ctx)))
+                Some(Arc::new(CSObj::new(ctx)))
             }
-            "script" => Some(Box::new(CSScript::new(
+            "script" => Some(Arc::new(CSScript::new(
                 child_text.as_ref().unwrap().clone(),
             ))),
             _ => {

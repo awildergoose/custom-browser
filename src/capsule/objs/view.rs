@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
-use crate::capsule::obj::{CapsuleObject, CapsuleObjectBase};
+use crate::{
+    capsule::obj::{CapsuleObject, CapsuleObjectBase},
+    impl_obj_traits,
+};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CapsuleView {
     base: Arc<CapsuleObjectBase>,
 }
@@ -14,3 +17,5 @@ impl CapsuleObject for CapsuleView {
 
     fn render(&self) {}
 }
+
+impl_obj_traits!(CapsuleView);

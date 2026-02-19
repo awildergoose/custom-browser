@@ -1,4 +1,6 @@
 use macroquad::color::Color;
+use mlua::UserData;
+use serde::Serialize;
 use stretch::style::{AlignItems, Dimension, FlexDirection, JustifyContent};
 
 use crate::renderer::constants::DEFAULT_TEXT_SIZE;
@@ -25,5 +27,16 @@ impl Default for Styling {
             color: None,
             flex_direction: None,
         }
+    }
+}
+
+impl UserData for Styling {}
+
+impl Serialize for Styling {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_unit_variant("align", 0, "variant")
     }
 }

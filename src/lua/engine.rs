@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use mlua::{Function, Lua, StdLib};
+use parking_lot::RwLock;
 
-use crate::lua::modules::get_capsule_module;
+use crate::{capsule::Capsule, lua::modules::get_capsule_module};
 
 #[derive(Debug, Default)]
 pub struct LuaEngine {
@@ -11,17 +12,19 @@ pub struct LuaEngine {
 }
 
 impl LuaEngine {
-    pub fn init(&mut self, code: &str) {
+    pub fn init(&mut self, code: &str, capsule: &Arc<RwLock<Capsule>>) {
         let globals = self.lua.globals();
         self.lua.load_std_libs(StdLib::ALL_SAFE).unwrap();
         globals
-            .set("capsule", get_capsule_module(&self.lua).unwrap())
+            .set("capsule", get_capsule_module(&self.lua, capsule).unwrap())
             .unwrap();
         code.clone_into(&mut self.code);
     }
 
     pub fn start(&mut self) {
-        self.lua.load(self.code.clone()).exec().unwrap();
+        if let Err(e) = self.lua.load(self.code.clone()).exec() {
+            log::error!("Lua error: {e}");
+        }
     }
 
     pub fn get_function(&mut self, name: &str) -> mlua::Result<Function> {

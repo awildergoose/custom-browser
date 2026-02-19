@@ -2,7 +2,10 @@
 #![allow(clippy::missing_panics_doc)]
 #![allow(clippy::missing_errors_doc)]
 
+use std::sync::Arc;
+
 use macroquad::prelude::*;
+use parking_lot::RwLock;
 
 use crate::{
     capsule::{Capsule, obj::iter_all_objects, parser::parse_capsule},
@@ -53,10 +56,36 @@ async fn main() {
         .filter_level(log::LevelFilter::Trace)
         .init();
 
+    {
+        use parking_lot::deadlock;
+        use std::{thread, time::Duration};
+
+        thread::spawn(move || {
+            loop {
+                thread::sleep(Duration::from_secs(10));
+                let deadlocks = deadlock::check_deadlock();
+                if deadlocks.is_empty() {
+                    continue;
+                }
+
+                println!("{} deadlocks detected", deadlocks.len());
+                for (i, threads) in deadlocks.iter().enumerate() {
+                    println!("Deadlock #{i}");
+                    for t in threads {
+                        println!("Thread Id {:#?}", t.thread_id());
+                        println!("{:#?}", t.backtrace());
+                    }
+                }
+            }
+        });
+    }
+
     let mut capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap())
         .expect("failed to parse capsule");
     compute_layout(&mut capsule);
-    capsule.run_scripts();
+
+    let mut capsule_arc = Arc::new(RwLock::new(capsule));
+    Capsule::run_scripts(&capsule_arc.clone());
 
     let mut debug_view = DebugView {
         show_mouse_hit: false,
@@ -64,21 +93,36 @@ async fn main() {
 
     loop {
         if is_key_pressed(KeyCode::F5) {
-            capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap())
-                .expect("failed to parse capsule");
-            compute_layout(&mut capsule);
-            capsule.run_scripts();
-            log::info!("Reloaded!");
+            match parse_capsule(&std::fs::read_to_string("test.capsule").unwrap()) {
+                Ok(mut cap) => {
+                    compute_layout(&mut cap);
+                    let cap = Arc::new(RwLock::new(cap));
+                    capsule_arc = cap;
+                    Capsule::run_scripts(&capsule_arc.clone());
+                    log::info!("Reloaded!");
+                }
+                Err(e) => {
+                    log::error!("failed to parse capsule: {e:#?}");
+                }
+            }
         }
 
         if is_key_pressed(KeyCode::F1) {
             debug_view.show_mouse_hit = !debug_view.show_mouse_hit;
         }
 
-        update_events(&mut capsule);
-        clear_background(BLACK);
-        render_capsule(&capsule);
-        render_debug_view(&debug_view, &capsule);
+        {
+            let mut cap = capsule_arc.write();
+            update_events(&mut cap);
+        }
+
+        {
+            let cap = capsule_arc.read();
+            clear_background(BLACK);
+            render_capsule(&cap);
+            render_debug_view(&debug_view, &cap);
+        }
+
         next_frame().await;
     }
 }

@@ -11,7 +11,7 @@ use crate::{
     lua::engine::LuaEngine,
 };
 
-pub type BoxedCapsuleObject = Box<dyn CapsuleObject + Sync + Send>;
+pub type BoxedCapsuleObject = Arc<dyn CapsuleObject + Sync + Send>;
 pub type CapsuleObjectChildren = Arc<ConcurrentVec<BoxedCapsuleObject>>;
 pub type CapsuleObjectEvents = Arc<ConcurrentVec<CapsuleObjectEvent>>;
 
@@ -66,6 +66,18 @@ impl CapsuleObjectBase {
             computed_style: Arc::default(),
         })
     }
+
+    #[must_use]
+    pub fn children_vec(&self) -> Vec<BoxedCapsuleObject> {
+        let mut out = Vec::new();
+
+        for child in self.children.iter() {
+            let child_owned: BoxedCapsuleObject = child.map(std::clone::Clone::clone);
+            out.push(child_owned);
+        }
+
+        out
+    }
 }
 
 #[derive(Debug, Default)]
@@ -82,15 +94,22 @@ pub struct Capsule {
 }
 
 impl Capsule {
-    pub fn run_scripts(&mut self) {
-        self.lua = LuaEngine::default();
+    pub fn run_scripts(capsule: &Arc<RwLock<Self>>) {
+        let scripts = {
+            let cap = capsule.read();
+            cap.meta.scripts.clone()
+        };
 
-        let scripts = &self.meta.scripts;
-        assert!(scripts.len() <= 1);
+        let mut lua = LuaEngine::default();
 
         for script in scripts {
-            self.lua.init(&script.code);
-            self.lua.start();
+            lua.init(&script.code, capsule);
+            lua.start();
+        }
+
+        {
+            let mut cap = capsule.write();
+            cap.lua = lua;
         }
     }
 }
@@ -118,4 +137,18 @@ where
     for obj in base.children.iter() {
         recurse(obj, &mut cb);
     }
+}
+
+#[macro_export]
+macro_rules! impl_obj_traits {
+    ($name:ident) => {
+        use mlua::UserData;
+
+        impl UserData for $name {
+            fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+                $crate::lua::holder::add_object_fields::<Self, F>(fields);
+                // TODO: allow custom fields here
+            }
+        }
+    };
 }

@@ -6,7 +6,8 @@
             print(`mem usage: {capsule.used_memory()}`)
             end
 
-            print("init capsule script!")
+            print(capsule.get_root().children[1].width)
+            print(capsule.get_root().children[1].children[1].width)
         </script>
     </meta>
     <view>
