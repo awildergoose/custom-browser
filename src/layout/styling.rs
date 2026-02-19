@@ -19,11 +19,13 @@ use crate::{
 pub struct Styling {
     pub align: COAlignItems,
     pub justify: COJustifyContent,
+    pub flex_direction: COFlexDirection,
+
     pub width: Option<CODimension>,
     pub height: Option<CODimension>,
-    pub font_size: u16,
     pub color: Option<COColor>,
-    pub flex_direction: Option<COFlexDirection>,
+    pub font_size: u16,
+
     dirty: bool,
 }
 
@@ -47,11 +49,11 @@ impl Default for Styling {
         Self {
             align: COAlignItems::default(),
             justify: COJustifyContent::default(),
+            flex_direction: COFlexDirection::default(),
             width: None,
             height: None,
             font_size: DEFAULT_TEXT_SIZE,
             color: None,
-            flex_direction: None,
             dirty: false,
         }
     }
@@ -150,16 +152,16 @@ impl UserData for StylingHandle {
         });
 
         fields.add_field_method_get("flex_direction", |lua, this| {
-            Ok(Value::String(lua.create_string(
-                this.0.read().flex_direction.as_ref().unwrap().as_ref(),
-            )?))
+            Ok(Value::String(
+                lua.create_string(this.0.read().flex_direction.as_ref())?,
+            ))
         });
 
         fields.add_field_method_set("flex_direction", |_lua, this, v: String| {
             let flex_direction = v
                 .parse::<COFlexDirection>()
                 .context("failed to parse flex_direction")?;
-            this.write().flex_direction = Some(flex_direction);
+            this.write().flex_direction = flex_direction;
             Ok(())
         });
     }

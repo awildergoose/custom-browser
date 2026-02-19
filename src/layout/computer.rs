@@ -7,10 +7,7 @@ use crate::{
         obj::{BoxedCapsuleObject, CapsuleObject},
         objs::text::CSText,
     },
-    layout::{
-        capsule::{dimension::CODimension, flexdir::COFlexDirection},
-        computed::ComputedStyling,
-    },
+    layout::{capsule::dimension::CODimension, computed::ComputedStyling},
 };
 use macroquad::text::measure_text;
 use stretch::{
@@ -47,10 +44,7 @@ pub fn compute_layout(capsule: &mut Capsule) {
             size: stretch::geometry::Size { width, height },
             align_items: s.align.as_stretch(),
             justify_content: s.justify.as_stretch(),
-            flex_direction: s
-                .flex_direction
-                .unwrap_or(COFlexDirection::Row)
-                .as_stretch(),
+            flex_direction: s.flex_direction.as_stretch(),
             ..Default::default()
         }
     }

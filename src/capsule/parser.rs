@@ -137,7 +137,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
 
         if let Some(flexdir) = child.attribute("flexdir") {
             if let Ok(flexdir) = flexdir.parse::<COFlexDirection>() {
-                style.flex_direction = Some(flexdir);
+                style.flex_direction = flexdir;
             } else {
                 log_bad_property!(flexdir);
             }
