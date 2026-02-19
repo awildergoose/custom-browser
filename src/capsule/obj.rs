@@ -5,7 +5,7 @@ use orx_concurrent_vec::{ConcurrentElement, ConcurrentVec};
 use parking_lot::RwLock;
 
 use crate::{
-    capsule::objs::{script::CSScript, view::CapsuleView},
+    capsule::objs::{script::CSScript, view::CSView},
     event::CapsuleObjectEvent,
     layout::{computed::ComputedStyling, styling::Styling},
     lua::engine::LuaEngine,
@@ -103,7 +103,7 @@ pub struct CapsuleMeta {
 #[derive(Debug, Default)]
 pub struct Capsule {
     pub meta: CapsuleMeta,
-    pub view: CapsuleView,
+    pub view: CSView,
     pub lua: ArcLock<LuaEngine>,
 }
 

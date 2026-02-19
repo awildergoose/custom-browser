@@ -10,6 +10,7 @@ use crate::{
     layout::{capsule::dimension::CODimension, computed::ComputedStyling},
 };
 use macroquad::text::measure_text;
+use orx_concurrent_vec::ConcurrentVec;
 use stretch::{
     Stretch,
     geometry::Size,
@@ -107,20 +108,22 @@ pub fn compute_layout(capsule: &mut Capsule) {
         root_children_nodes.push(build_node(&mut stretch, child));
     }
 
-    let root_node = stretch
-        .new_node(
-            Style {
-                #[allow(clippy::cast_precision_loss)]
-                size: Size {
-                    width: Dimension::Points(WINDOW_WIDTH as f32),
-                    height: Dimension::Points(WINDOW_HEIGHT as f32),
-                },
-                flex_direction: stretch::style::FlexDirection::Column,
-                ..Default::default()
-            },
-            root_children_nodes,
-        )
-        .unwrap();
+    // HACK: this is just so we can get a [`ConcurrentElement`] to pass
+    // to [`styling_to_stretch`]
+    let root_: ConcurrentVec<BoxedCapsuleObject> = ConcurrentVec::new();
+    let arc = Arc::new(capsule.view.clone());
+    root_.push(arc);
+    let mut root_style = styling_to_stretch(root_.get(0).unwrap());
+
+    #[allow(clippy::cast_precision_loss)]
+    {
+        root_style.size = Size {
+            width: Dimension::Points(WINDOW_WIDTH as f32),
+            height: Dimension::Points(WINDOW_HEIGHT as f32),
+        };
+    }
+
+    let root_node = stretch.new_node(root_style, root_children_nodes).unwrap();
 
     stretch
         .compute_layout(root_node, Size::undefined())

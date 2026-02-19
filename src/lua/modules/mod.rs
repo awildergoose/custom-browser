@@ -3,13 +3,13 @@ use std::sync::Arc;
 
 use mlua::prelude::*;
 
-use crate::capsule::{Capsule, obj::ArcLock, objs::view::CapsuleView};
+use crate::capsule::{Capsule, obj::ArcLock, objs::view::CSView};
 
 fn used_memory(lua: &Lua, _: ()) -> LuaResult<usize> {
     Ok(lua.used_memory())
 }
 
-fn get_root(_lua: &Lua, capsule: &ArcLock<Capsule>) -> LuaResult<CapsuleView> {
+fn get_root(_lua: &Lua, capsule: &ArcLock<Capsule>) -> LuaResult<CSView> {
     Ok(capsule.read().view.clone())
 }
 

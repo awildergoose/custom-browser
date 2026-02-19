@@ -7,8 +7,8 @@ use roxmltree::Node;
 use crate::{
     capsule::{
         Capsule,
-        obj::{BoxedCapsuleObject, CapsuleMeta, CapsuleObject, CapsuleObjectCreationContext},
-        objs::{obj::CSObj, script::CSScript, text::CSText, view::CapsuleView},
+        obj::{BoxedCapsuleObject, CapsuleMeta, CapsuleObjectCreationContext},
+        objs::{obj::CSObj, script::CSScript, text::CSText, view::CSView},
     },
     event::CapsuleObjectEvent,
     layout::{
@@ -133,7 +133,6 @@ pub fn clean_text(s: String) -> String {
 #[must_use]
 fn parse_capsule_meta(child: Node) -> CapsuleMeta {
     let mut meta = CapsuleMeta::default();
-    assert_eq!(child.tag_name().name(), "meta");
 
     for node in child.children() {
         if node.is_text() || node.is_comment() {
@@ -164,7 +163,7 @@ fn parse_capsule_meta(child: Node) -> CapsuleMeta {
 
 #[must_use]
 #[allow(clippy::too_many_lines)]
-fn parse_capsule_view(view: Node) -> CapsuleView {
+fn parse_capsule_view(view: Node) -> CSView {
     fn parse_child(child: Node) -> Option<BoxedCapsuleObject> {
         if child.is_text() || child.is_comment() {
             return None;
@@ -222,6 +221,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             "script" => Some(Arc::new(CSScript::new(
                 child_text.as_ref().unwrap().clone(),
             ))),
+            "view" => Some(Arc::new(CSView::new(ctx))),
             _ => {
                 log::warn!("unknown node type: '{tag_name}'");
                 None
@@ -229,24 +229,29 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         }
     }
 
-    let out = CapsuleView::default();
-    assert_eq!(view.tag_name().name(), "view");
-
-    for child in view.children() {
-        let c = parse_child(child);
-        if let Some(c) = c {
-            out.base().children.push(c);
-        }
+    let out = parse_child(view);
+    if out.is_none() {
+        let out = CSView::default();
+        log::error!("view is not a valid element!");
+        return out;
+    }
+    let out = out.as_ref().unwrap().as_any().downcast_ref::<CSView>();
+    if out.is_none() {
+        let out = CSView::default();
+        log::error!("view is not a valid view element!");
+        return out;
     }
 
-    out
+    out.unwrap().clone()
 }
 
 pub fn parse_capsule(text: &str) -> anyhow::Result<Capsule> {
     let mut capsule = Capsule::default();
     let xml_document = roxmltree::Document::parse(text)?;
 
-    assert_eq!(xml_document.root_element().tag_name().name(), "capsule");
+    if xml_document.root_element().tag_name().name() != "capsule" {
+        return Err(anyhow::anyhow!("Root node is not of tag capsule"));
+    }
 
     let root_children = xml_document.root_element().children();
 
@@ -255,7 +260,9 @@ pub fn parse_capsule(text: &str) -> anyhow::Result<Capsule> {
             continue;
         }
 
-        assert!(root_child.tag_name().name() == "meta" || root_child.tag_name().name() == "view");
+        if root_child.tag_name().name() != "meta" && root_child.tag_name().name() != "view" {
+            return Err(anyhow::anyhow!("Sub-root node is not of tag meta or view"));
+        }
 
         if root_child.tag_name().name() == "meta" {
             capsule.meta = parse_capsule_meta(root_child);

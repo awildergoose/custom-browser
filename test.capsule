@@ -15,10 +15,10 @@
             -- print(capsule.root().children[1].children[2].style.width)
         </script>
     </meta>
-    <view>
+    <view flexdir="column">
         <text onclick="onclick" background_color="#ff00008f" color="green" font_size="32">hello,
             world!!</text>
-        <!-- <obj justify="space_between" onclick="onclick">
+        <obj justify="space_between" onclick="onclick">
             <obj width="50%" height="20" color="green" />
             <text color="#ff00008f">hello, world! b5</text>
         </obj>
@@ -26,6 +26,6 @@
             <text>ahello world but cooler!</text>
             <obj width="41.5%" height="20" color="red" />
             <text color="#ff00008f">hello, world! b2</text>
-        </obj> -->
+        </obj>
     </view>
 </capsule>
