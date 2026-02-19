@@ -1,0 +1,137 @@
+# heavily modified version of
+# https://github.com/richardsondev/rustapplicationtemplate
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  release:
+    types: [released]
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build and Release
+    permissions:
+      contents: write
+    env:
+      APP_NAME: custom-browser
+      AWS_LC_SYS_PREBUILT_NASM: 1
+    strategy:
+      matrix:
+        target:
+          - {
+              displayName: 32-bit Windows,
+              rustTarget: i686-pc-windows-msvc,
+              runner: windows-latest,
+            }
+          - {
+              displayName: 64-bit Windows,
+              rustTarget: x86_64-pc-windows-msvc,
+              runner: windows-latest,
+            }
+
+          - {
+              displayName: 32-bit Linux,
+              rustTarget: i686-unknown-linux-gnu,
+              runner: ubuntu-latest,
+            }
+          - {
+              displayName: 64-bit Linux,
+              rustTarget: x86_64-unknown-linux-gnu,
+              runner: ubuntu-latest,
+            }
+
+          - {
+              displayName: 64-bit macOS,
+              rustTarget: x86_64-apple-darwin,
+              runner: macos-latest,
+            }
+
+    runs-on: ${{ matrix.target.runner }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Install Rust targets
+        run: rustup target add ${{ matrix.target.rustTarget }}
+
+      - name: Install system packages for cross-building
+        if: ${{ matrix.target.runner == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libssl-dev nasm ca-certificates curl git
+
+          sudo apt-get install -y gcc-multilib g++-multilib libc6-dev-i386
+
+          sudo apt-get install -y \
+            gcc-i686-linux-gnu \
+            gcc-arm-linux-gnueabi \
+            gcc-arm-linux-gnueabihf \
+            gcc-aarch64-linux-gnu \
+            binutils-multiarch
+
+          echo "Installed compilers:"
+          which i686-linux-gnu-gcc || true
+          which gcc || true
+          which arm-linux-gnueabi-gcc || true
+          which arm-linux-gnueabihf-gcc || true
+          which aarch64-linux-gnu-gcc || true
+
+      - name: Configure cross toolchain environment
+        if: ${{ matrix.target.runner == 'ubuntu-latest' }}
+        run: |
+          case "${{ matrix.target.rustTarget }}" in
+            i686-unknown-linux-gnu)
+              echo "CC=i686-linux-gnu-gcc" >> $GITHUB_ENV
+              echo "AR=i686-linux-gnu-ar" >> $GITHUB_ENV
+              echo "CARGO_TARGET_I686_UNKNOWN_LINUX_GNU_LINKER=i686-linux-gnu-gcc" >> $GITHUB_ENV
+              ;;
+            x86_64-unknown-linux-gnu)
+              echo "CC=gcc" >> $GITHUB_ENV
+              echo "AR=ar" >> $GITHUB_ENV
+              echo "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=gcc" >> $GITHUB_ENV
+              ;;
+            arm-unknown-linux-gnueabi)
+              echo "CC=arm-linux-gnueabi-gcc" >> $GITHUB_ENV
+              echo "AR=arm-linux-gnueabi-ar" >> $GITHUB_ENV
+              echo "CARGO_TARGET_ARM_UNKNOWN_LINUX_GNU_LINKER=arm-linux-gnueabi-gcc" >> $GITHUB_ENV
+              ;;
+            armv7-unknown-linux-gnueabihf)
+              echo "CC=arm-linux-gnueabihf-gcc" >> $GITHUB_ENV
+              echo "AR=arm-linux-gnueabihf-ar" >> $GITHUB_ENV
+              echo "CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNU_LINKER=arm-linux-gnueabihf-gcc" >> $GITHUB_ENV
+              ;;
+            aarch64-unknown-linux-gnu)
+              echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+              echo "AR=aarch64-linux-gnu-ar" >> $GITHUB_ENV
+              echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+              ;;
+            *)
+              ;;
+          esac
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target.rustTarget }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ matrix.target.rustTarget }}${{ endsWith(matrix.target.rustTarget, '-windows-msvc') && '.exe' || '' }}
+          path: ./target/${{ matrix.target.rustTarget }}/release/${{ env.APP_NAME }}${{ endsWith(matrix.target.rustTarget, '-windows-msvc') && '.exe' || '' }}
+
+      - name: Upload Release Asset
+        if: github.event_name == 'release'
+        id: upload-release-asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp ./target/${{ matrix.target.rustTarget }}/release/${{ env.APP_NAME }}${{ endsWith(matrix.target.rustTarget, '-windows-msvc') && '.exe' || '' }} ./${{ env.APP_NAME }}-${{ github.ref_name }}-${{ matrix.target.rustTarget }}${{ endsWith(matrix.target.rustTarget, '-windows-msvc') && '.exe' || '' }} &&
+          gh release upload ${{ github.event.release.tag_name }} ./${{ env.APP_NAME }}-${{ github.ref_name }}-${{ matrix.target.rustTarget }}${{ endsWith(matrix.target.rustTarget, '-windows-msvc') && '.exe' || '' }}#"${{ env.APP_NAME }}-${{ github.ref_name }}-${{ matrix.target.rustTarget }} (${{ matrix.target.displayName }})"
