@@ -10,5 +10,6 @@ log = "0.4.29"
 macroquad = "0.4.14"
 orx-concurrent-vec = "3.10.0"
 parking_lot = { version = "0.12.5", features = ["deadlock_detection"] }
+parse-color = "0.1.2"
 roxmltree = "0.21.1"
 stretch = "0.3.2"

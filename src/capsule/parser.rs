@@ -1,4 +1,4 @@
-use macroquad::text::measure_text;
+use macroquad::{color::Color, text::measure_text};
 use orx_concurrent_vec::ConcurrentVec;
 use roxmltree::Node;
 
@@ -10,6 +10,27 @@ use crate::{
     },
     layout::styling::Styling,
 };
+
+#[must_use]
+fn try_parse_color(color: &str) -> Option<Color> {
+    let color = color.strip_prefix("0x").unwrap_or(color);
+    let color = color.strip_prefix("#").unwrap_or(color);
+
+    if color.len() != 6 && color.len() != 8 {
+        return None;
+    }
+
+    let r = u8::from_str_radix(&color[0..2], 16).ok()?;
+    let g = u8::from_str_radix(&color[2..4], 16).ok()?;
+    let b = u8::from_str_radix(&color[4..6], 16).ok()?;
+    let a = if color.len() == 8 {
+        u8::from_str_radix(&color[6..8], 16).ok()?
+    } else {
+        255
+    };
+
+    Some(Color::from_rgba(r, g, b, a))
+}
 
 #[must_use]
 fn parse_capsule_meta(child: Node) -> CapsuleMeta {
@@ -98,40 +119,12 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         }
 
         if let Some(color) = child.attribute("color") {
-            use macroquad::color::colors::{
-                BEIGE, BLACK, BLANK, BLUE, BROWN, DARKBLUE, DARKBROWN, DARKGRAY, DARKGREEN,
-                DARKPURPLE, GOLD, GRAY, GREEN, LIGHTGRAY, LIME, MAGENTA, MAROON, ORANGE, PINK,
-                PURPLE, RED, SKYBLUE, VIOLET, WHITE, YELLOW,
-            };
-
-            style.color = match color {
-                "lightgray" => LIGHTGRAY,
-                "gray" => GRAY,
-                "darkgray" => DARKGRAY,
-                "yellow" => YELLOW,
-                "gold" => GOLD,
-                "orange" => ORANGE,
-                "pink" => PINK,
-                "red" => RED,
-                "maroon" => MAROON,
-                "green" => GREEN,
-                "lime" => LIME,
-                "darkgreen" => DARKGREEN,
-                "skyblue" => SKYBLUE,
-                "blue" => BLUE,
-                "darkblue" => DARKBLUE,
-                "purple" => PURPLE,
-                "violet" => VIOLET,
-                "darkpurple" => DARKPURPLE,
-                "beige" => BEIGE,
-                "brown" => BROWN,
-                "darkbrown" => DARKBROWN,
-                "white" => WHITE,
-                "black" => BLACK,
-                "blank" => BLANK,
-                "magenta" => MAGENTA,
-                _ => panic!("bad color property: '{color}'"),
-            };
+            style.color = parse_color::parse(color)
+                .map_or_else(
+                    || try_parse_color(color),
+                    |[r, g, b, a]| Some(Color::new(r.into(), g.into(), b.into(), a.into())),
+                )
+                .unwrap();
         }
 
         let children = children.into();

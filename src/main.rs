@@ -22,13 +22,15 @@ async fn main() {
     let mut capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap());
     compute_layout(&mut capsule);
 
-    log::info!("capsule: {capsule:?}");
-
     loop {
+        if is_key_pressed(KeyCode::F5) {
+            capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap());
+            compute_layout(&mut capsule);
+            log::info!("Reloaded!");
+        }
+
         clear_background(BLACK);
-
         render_capsule(&capsule);
-
         next_frame().await;
     }
 }

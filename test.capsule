@@ -5,6 +5,6 @@
     <view>
         <text align="center">hello, world!</text>
         <obj />
-        <text justify="center" align="center" color="green">hello, world! b2</text>
+        <text justify="center" align="center" color="#ff00008f">hello, world! b2</text>
     </view>
 </capsule>

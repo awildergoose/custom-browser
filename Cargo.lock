@@ -170,6 +170,7 @@ dependencies = [
  "macroquad",
  "orx-concurrent-vec",
  "parking_lot",
+ "parse-color",
  "roxmltree",
  "stretch",
 ]
@@ -576,6 +577,12 @@ dependencies = [
  "smallvec",
  "windows-link",
 ]
+
+[[package]]
+name = "parse-color"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "405bc84cb7a2b3ff5eafd8f73651d06bc97262a1faaec9708cdb1e4502ee3850"
 
 [[package]]
 name = "petgraph"
