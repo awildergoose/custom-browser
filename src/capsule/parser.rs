@@ -64,6 +64,18 @@ macro_rules! color_attr {
     };
 }
 
+macro_rules! primitive_attr {
+    ($child: ident, $style: ident, $name: ident, $type: tt) => {
+        if let Some(value) = $child.attribute(stringify!($name)) {
+            if let Ok(parsed) = value.parse::<$type>() {
+                $style.$name = parsed;
+            } else {
+                log_bad_property!(value);
+            }
+        }
+    };
+}
+
 #[must_use]
 pub fn try_parse_color(color: &str) -> Option<COColor> {
     if let Some([r, g, b, a]) = parse_color::parse(color) {
@@ -105,6 +117,12 @@ pub fn try_parse_dimension(text: &str) -> Option<CODimension> {
 }
 
 #[must_use]
+#[allow(clippy::needless_pass_by_value)]
+pub fn clean_text(s: String) -> String {
+    s.lines().map(str::trim).collect::<Vec<_>>().join("\n")
+}
+
+#[must_use]
 fn parse_capsule_meta(child: Node) -> CapsuleMeta {
     let mut meta = CapsuleMeta::default();
     assert_eq!(child.tag_name().name(), "meta");
@@ -115,7 +133,10 @@ fn parse_capsule_meta(child: Node) -> CapsuleMeta {
         }
 
         let tag_name = node.tag_name().name();
-        let text = node.text().map(std::string::ToString::to_string);
+        let text = node
+            .text()
+            .map(std::string::ToString::to_string)
+            .map(clean_text);
 
         match tag_name {
             "title" => {
@@ -142,7 +163,10 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         }
 
         let tag_name = child.tag_name().name();
-        let child_text = child.text().map(std::string::ToString::to_string);
+        let child_text = child
+            .text()
+            .map(std::string::ToString::to_string)
+            .map(clean_text);
 
         let children = ConcurrentVec::new();
 
@@ -155,11 +179,12 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
 
         let mut style = Styling::default();
 
+        primitive_attr!(child, style, font_size, u16);
+        dimension_attr!(child, style, width);
+        dimension_attr!(child, style, height);
         enum_attr!(child, style, align, COAlignItems);
         enum_attr!(child, style, justify, COJustifyContent);
         enum_attr!(child, style, flexdir, COFlexDirection);
-        dimension_attr!(child, style, width);
-        dimension_attr!(child, style, height);
         color_attr!(child, style, color);
         color_attr!(child, style, background_color);
 

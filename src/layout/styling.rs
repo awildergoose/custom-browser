@@ -142,12 +142,12 @@ macro_rules! impl_setget_color {
 
 impl UserData for StylingHandle {
     fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
+        impl_setget_primitive!(fields, font_size, u16, Number);
         impl_setget_dimension!(fields, width);
         impl_setget_dimension!(fields, height);
         impl_setget_enum!(fields, align, COAlignItems);
         impl_setget_enum!(fields, justify, COJustifyContent);
         impl_setget_enum!(fields, flexdir, COFlexDirection);
-        impl_setget_primitive!(fields, font_size, u16, Number);
         impl_setget_color!(fields, color);
         impl_setget_color!(fields, background_color);
     }

@@ -16,7 +16,8 @@
         </script>
     </meta>
     <view>
-        <text onclick="onclick" background_color="#ff00008f" color="green">hello, world!</text>
+        <text onclick="onclick" background_color="#ff00008f" color="green" font_size="32">hello,
+            world!!</text>
         <!-- <obj justify="space_between" onclick="onclick">
             <obj width="50%" height="20" color="green" />
             <text color="#ff00008f">hello, world! b5</text>
