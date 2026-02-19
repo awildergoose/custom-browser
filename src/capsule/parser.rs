@@ -1,10 +1,11 @@
+use macroquad::text::measure_text;
 use orx_concurrent_vec::ConcurrentVec;
 use roxmltree::Node;
 
 use crate::{
     capsule::{
         Capsule,
-        obj::{BoxedCapsuleObject, CSText, CapsuleMeta, CapsuleObject, CapsuleView},
+        obj::{BoxedCapsuleObject, CSObj, CSText, CapsuleMeta, CapsuleObject, CapsuleView},
     },
     layout::styling::Styling,
 };
@@ -29,6 +30,9 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             return None;
         }
 
+        let tag_name = child.tag_name().name();
+        let child_text = child.text().map(std::string::ToString::to_string);
+
         let children = ConcurrentVec::new();
 
         for child in child.children() {
@@ -47,21 +51,54 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
                 "center" => stretch::style::AlignItems::Center,
                 "baseline" => stretch::style::AlignItems::Baseline,
                 "stretch" => stretch::style::AlignItems::Stretch,
-                _ => panic!("unknown align type"),
+                _ => panic!("bad align property: {align}"),
             };
+        }
+
+        if let Some(justify) = child.attribute("justify") {
+            style.justify = match justify {
+                "flexstart" => stretch::style::JustifyContent::FlexStart,
+                "flexend" => stretch::style::JustifyContent::FlexEnd,
+                "center" => stretch::style::JustifyContent::Center,
+                "spacebetween" => stretch::style::JustifyContent::SpaceBetween,
+                "spacearound" => stretch::style::JustifyContent::SpaceAround,
+                "spaceevenly" => stretch::style::JustifyContent::SpaceEvenly,
+                _ => panic!("bad justify property: {justify}"),
+            };
+        }
+
+        if child.tag_name().name() == "text" {
+            let measured = measure_text(child_text.as_ref().unwrap(), None, style.font_size, 1.0);
+            style.width = Some(stretch::style::Dimension::Points(measured.width));
+            style.height = Some(stretch::style::Dimension::Points(measured.height));
+        }
+
+        if let Some(width) = child.attribute("width") {
+            if let Ok(width) = width.parse::<f32>() {
+                style.width = Some(stretch::style::Dimension::Points(width));
+            } else {
+                log::warn!("bad width property: '{width}'");
+            }
+        }
+
+        if let Some(height) = child.attribute("height") {
+            if let Ok(height) = height.parse::<f32>() {
+                style.height = Some(stretch::style::Dimension::Points(height));
+            } else {
+                log::warn!("bad height property: '{height}'");
+            }
         }
 
         let children = children.into();
         let style = style.into();
 
-        let tag_name = child.tag_name().name();
-
         Some(match tag_name {
             "text" => Box::new(CSText::new(
-                child.text().unwrap().to_string(),
+                child_text.as_ref().unwrap().clone(),
                 children,
                 style,
             )),
+            "obj" => Box::new(CSObj::new(children, style)),
             _ => panic!("unknown node type: '{tag_name}'"),
         })
     }

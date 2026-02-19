@@ -13,8 +13,8 @@ pub fn compute_layout(capsule: &mut Capsule) {
     fn styling_to_stretch(s: &Styling) -> Style {
         Style {
             size: stretch::geometry::Size {
-                width: s.width,
-                height: s.height,
+                width: s.width.unwrap_or(stretch::style::Dimension::Auto),
+                height: s.height.unwrap_or(stretch::style::Dimension::Auto),
             },
             align_items: s.align,
             justify_content: s.justify,

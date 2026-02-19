@@ -83,6 +83,35 @@ impl CapsuleObject for CSText {
 
     fn render(&self) {
         let computed = self.base.computed_style.read();
-        draw_text_top_left(&self.text, computed.x, computed.y, 32.0, RED);
+        draw_text_top_left(
+            &self.text,
+            computed.x,
+            computed.y,
+            self.base.style.font_size.into(),
+            RED,
+        );
     }
+}
+
+// obj (like a div)
+#[derive(Debug, Default)]
+pub struct CSObj {
+    base: Arc<CapsuleObjectBase>,
+}
+
+impl CSObj {
+    #[must_use]
+    pub fn new(children: CapsuleObjectChildren, style: Arc<Styling>) -> Self {
+        Self {
+            base: CapsuleObjectBase::new(children, style),
+        }
+    }
+}
+
+impl CapsuleObject for CSObj {
+    fn base(&self) -> Arc<CapsuleObjectBase> {
+        self.base.clone()
+    }
+
+    fn render(&self) {}
 }
