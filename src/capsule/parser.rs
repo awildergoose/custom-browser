@@ -76,6 +76,14 @@ macro_rules! primitive_attr {
     };
 }
 
+macro_rules! event_attr {
+    ($child: ident, $events: ident, $name: ident) => {
+        if let Some(value) = $child.attribute(stringify!($name)) {
+            $events.push(CapsuleObjectEvent::new(stringify!($name), value));
+        }
+    };
+}
+
 #[must_use]
 pub fn try_parse_color(color: &str) -> Option<COColor> {
     if let Some([r, g, b, a]) = parse_color::parse(color) {
@@ -178,6 +186,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         }
 
         let mut style = Styling::default();
+        let events = ConcurrentVec::new();
 
         primitive_attr!(child, style, font_size, u16);
         dimension_attr!(child, style, width);
@@ -187,12 +196,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         enum_attr!(child, style, flexdir, COFlexDirection);
         color_attr!(child, style, color);
         color_attr!(child, style, background_color);
-
-        let events = ConcurrentVec::new();
-
-        if let Some(onclick) = child.attribute("onclick") {
-            events.push(CapsuleObjectEvent::new("onclick", onclick));
-        }
+        event_attr!(child, events, onclick);
 
         let mut style_clone = style.clone();
 
