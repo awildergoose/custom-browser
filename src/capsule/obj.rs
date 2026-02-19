@@ -11,6 +11,7 @@ use crate::{
     lua::engine::LuaEngine,
 };
 
+pub type ArcLock<T> = Arc<RwLock<T>>;
 pub type BoxedCapsuleObject = Arc<dyn CapsuleObject + Sync + Send>;
 pub type CapsuleObjectChildren = Arc<ConcurrentVec<BoxedCapsuleObject>>;
 pub type CapsuleObjectEvents = Arc<ConcurrentVec<CapsuleObjectEvent>>;
@@ -24,21 +25,30 @@ pub trait CapsuleObject: Debug {
 
         Rect::new(computed.x, computed.y, computed.width, computed.height)
     }
+
+    fn is_dirty(&self) -> bool {
+        *self.base().dirty.read()
+    }
+
+    fn set_dirty(&self) {
+        *self.base().dirty.write() = true;
+    }
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct CapsuleObjectBase {
     pub children: CapsuleObjectChildren,
     pub events: CapsuleObjectEvents,
-    pub style: Arc<Styling>,
-    pub computed_style: Arc<RwLock<ComputedStyling>>,
+    pub style: ArcLock<Styling>,
+    pub computed_style: ArcLock<ComputedStyling>,
+    pub dirty: ArcLock<bool>,
 }
 
 #[derive(Debug, Default)]
 pub struct CapsuleObjectCreationContext {
     pub children: CapsuleObjectChildren,
     pub events: CapsuleObjectEvents,
-    pub style: Arc<Styling>,
+    pub style: ArcLock<Styling>,
 }
 
 impl CapsuleObjectCreationContext {
@@ -46,7 +56,7 @@ impl CapsuleObjectCreationContext {
     pub fn new(
         children: CapsuleObjectChildren,
         events: CapsuleObjectEvents,
-        style: Arc<Styling>,
+        style: ArcLock<Styling>,
     ) -> Self {
         Self {
             children,
@@ -64,6 +74,7 @@ impl CapsuleObjectBase {
             style: ctx.style,
             events: ctx.events,
             computed_style: Arc::default(),
+            dirty: RwLock::new(false).into(),
         })
     }
 
@@ -90,11 +101,11 @@ pub struct CapsuleMeta {
 pub struct Capsule {
     pub meta: CapsuleMeta,
     pub view: CapsuleView,
-    pub lua: LuaEngine,
+    pub lua: ArcLock<LuaEngine>,
 }
 
 impl Capsule {
-    pub fn run_scripts(capsule: &Arc<RwLock<Self>>) {
+    pub fn run_scripts(capsule: &ArcLock<Self>) {
         let scripts = {
             let cap = capsule.read();
             cap.meta.scripts.clone()
@@ -109,7 +120,7 @@ impl Capsule {
 
         {
             let mut cap = capsule.write();
-            cap.lua = lua;
+            cap.lua = RwLock::new(lua).into();
         }
     }
 }

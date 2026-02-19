@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::capsule::obj::CapsuleObject;
+use crate::capsule::{obj::CapsuleObject, parser::try_parse_dimension};
 use mlua::{UserData, Value};
 
 #[derive(Debug, Clone)]
@@ -30,10 +30,17 @@ where
         Ok(Value::Table(table))
     });
 
-    fields.add_field_method_get("width", |lua, this: &T| {
+    fields.add_field_method_get("width", |_lua, this: &T| {
+        // TODO: Value::String style
         Ok(Value::Number(
             this.base().computed_style.read().width.into(),
         ))
+    });
+
+    fields.add_field_method_set("width", |_lua, this: &mut T, v: String| {
+        this.base().style.write().width = try_parse_dimension(&v);
+        this.set_dirty();
+        Ok(())
     });
 }
 

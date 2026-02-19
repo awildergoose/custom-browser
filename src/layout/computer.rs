@@ -34,8 +34,8 @@ pub fn compute_layout(capsule: &mut Capsule) {
         stretch: &mut Stretch,
         child: &orx_concurrent_vec::ConcurrentElement<BoxedCapsuleObject>,
     ) -> stretch::node::Node {
-        let style_arc: Arc<Styling> = child.map(|c| c.base().style.clone());
-        let node_style = styling_to_stretch(&style_arc);
+        let style_arc = child.map(|c| c.base().style.clone());
+        let node_style = styling_to_stretch(&style_arc.read());
 
         let children_nodes: Vec<_> = {
             let child_children: Arc<orx_concurrent_vec::ConcurrentVec<BoxedCapsuleObject>> =

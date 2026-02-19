@@ -10,7 +10,7 @@ use parking_lot::RwLock;
 use crate::{
     capsule::{Capsule, obj::iter_all_objects, parser::parse_capsule},
     event::update::update_events,
-    layout::computer::compute_layout,
+    layout::{computer::compute_layout, dirty::update_layout},
     renderer::full::render_capsule,
 };
 
@@ -111,10 +111,8 @@ async fn main() {
             debug_view.show_mouse_hit = !debug_view.show_mouse_hit;
         }
 
-        {
-            let mut cap = capsule_arc.write();
-            update_events(&mut cap);
-        }
+        update_layout(&capsule_arc.clone());
+        update_events(&capsule_arc.clone());
 
         {
             let cap = capsule_arc.read();

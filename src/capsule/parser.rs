@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use macroquad::{color::Color, text::measure_text};
 use orx_concurrent_vec::ConcurrentVec;
+use parking_lot::RwLock;
 use roxmltree::Node;
 use stretch::style::Dimension;
 
@@ -24,7 +25,7 @@ macro_rules! log_bad_property {
 }
 
 #[must_use]
-fn try_parse_color(color: &str) -> Option<Color> {
+pub fn try_parse_color(color: &str) -> Option<Color> {
     if let Some([r, g, b, a]) = parse_color::parse(color) {
         return Some(Color::from_rgba(r, g, b, a));
     }
@@ -49,7 +50,7 @@ fn try_parse_color(color: &str) -> Option<Color> {
 }
 
 #[must_use]
-fn try_parse_dimension(text: &str) -> Option<Dimension> {
+pub fn try_parse_dimension(text: &str) -> Option<Dimension> {
     if text.ends_with('%') {
         return Some(Dimension::Percent(
             text.strip_suffix("%").unwrap().parse::<f32>().ok()? / 100.0,
@@ -202,7 +203,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         let mut style_clone = style.clone();
 
         let children_arc = children.into();
-        let style_arc = style.into();
+        let style_arc = RwLock::new(style).into();
         let events_arc = events.into();
 
         let mut ctx = CapsuleObjectCreationContext::new(children_arc, events_arc, style_arc);
@@ -216,7 +217,7 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             "br" => {
                 style_clone.width = Some(Dimension::Points(0.0));
                 style_clone.height = Some(Dimension::Points(BR_LINE_HEIGHT));
-                ctx.style = style_clone.into();
+                ctx.style = RwLock::new(style_clone).into();
 
                 Some(Arc::new(CSObj::new(ctx)))
             }

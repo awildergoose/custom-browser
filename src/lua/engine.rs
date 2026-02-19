@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
 use mlua::{Function, Lua, StdLib};
-use parking_lot::RwLock;
 
-use crate::{capsule::Capsule, lua::modules::get_capsule_module};
+use crate::{
+    capsule::{Capsule, obj::ArcLock},
+    lua::modules::get_capsule_module,
+};
 
 #[derive(Debug, Default)]
 pub struct LuaEngine {
@@ -12,7 +14,7 @@ pub struct LuaEngine {
 }
 
 impl LuaEngine {
-    pub fn init(&mut self, code: &str, capsule: &Arc<RwLock<Capsule>>) {
+    pub fn init(&mut self, code: &str, capsule: &ArcLock<Capsule>) {
         let globals = self.lua.globals();
         self.lua.load_std_libs(StdLib::ALL_SAFE).unwrap();
         globals

@@ -30,12 +30,13 @@ impl CapsuleObject for CSText {
 
     fn render(&self) {
         let computed = self.base.computed_style.read();
+        let style = self.base.style.read();
         draw_text_top_left(
             &self.text,
             computed.x,
             computed.y,
-            self.base.style.font_size.into(),
-            self.base.style.color.unwrap_or(WHITE),
+            style.font_size.into(),
+            style.color.unwrap_or(WHITE),
         );
     }
 }
