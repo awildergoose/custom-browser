@@ -5,7 +5,9 @@
 use macroquad::prelude::*;
 
 use crate::{
-    capsule::parser::parse_capsule, event::update::update_events, layout::computer::compute_layout,
+    capsule::{Capsule, obj::iter_all_objects, parser::parse_capsule},
+    event::update::update_events,
+    layout::computer::compute_layout,
     renderer::full::render_capsule,
 };
 
@@ -29,6 +31,24 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    struct DebugView {
+        pub show_mouse_hit: bool,
+    }
+
+    fn render_debug_view(debug_view: &DebugView, capsule: &Capsule) {
+        if debug_view.show_mouse_hit {
+            let mouse_position = Vec2::from(mouse_position());
+
+            iter_all_objects(capsule, |e| {
+                let bb = e.map(|o| o.bounding_box());
+
+                if bb.contains(mouse_position) {
+                    draw_rectangle(bb.x, bb.y, bb.w, bb.h, Color::from_rgba(255, 255, 0, 128));
+                }
+            });
+        }
+    }
+
     env_logger::builder()
         .filter_level(log::LevelFilter::Trace)
         .init();
@@ -37,6 +57,10 @@ async fn main() {
         .expect("failed to parse capsule");
     compute_layout(&mut capsule);
     capsule.run_scripts();
+
+    let mut debug_view = DebugView {
+        show_mouse_hit: false,
+    };
 
     loop {
         if is_key_pressed(KeyCode::F5) {
@@ -47,9 +71,14 @@ async fn main() {
             log::info!("Reloaded!");
         }
 
+        if is_key_pressed(KeyCode::F1) {
+            debug_view.show_mouse_hit = !debug_view.show_mouse_hit;
+        }
+
         update_events(&mut capsule);
         clear_background(BLACK);
         render_capsule(&capsule);
+        render_debug_view(&debug_view, &capsule);
         next_frame().await;
     }
 }

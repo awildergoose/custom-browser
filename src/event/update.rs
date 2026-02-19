@@ -7,8 +7,6 @@ use crate::capsule::{Capsule, obj::iter_all_objects};
 
 pub fn update_events(capsule: &mut Capsule) {
     if is_mouse_button_pressed(MouseButton::Left) {
-        // onclick event
-        // check what we clicked on
         let mouse_position = Vec2::from(mouse_position());
         let mut callbacks = vec![];
 
