@@ -80,7 +80,6 @@ macro_rules! event_attr {
     ($child: ident, $events: ident, $name: ident) => {
         if let Some(value) = $child.attribute(stringify!($name)) {
             $events.push(CapsuleObjectEvent::new(stringify!($name), value));
-            log::info!("added event {} to {:?}", stringify!($name), $child);
         }
     };
 }
