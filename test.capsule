@@ -4,7 +4,7 @@
     </meta>
     <view>
         <text align="center">hello, world!</text>
-        <obj />
+        <br />
         <text justify="center" align="center" color="#ff00008f">hello, world! b2</text>
     </view>
 </capsule>

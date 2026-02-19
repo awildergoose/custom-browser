@@ -13,7 +13,19 @@ pub mod capsule;
 pub mod layout;
 pub mod renderer;
 
-#[macroquad::main("Capsule Browser")]
+pub const WINDOW_WIDTH: i32 = 800;
+pub const WINDOW_HEIGHT: i32 = 600;
+
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Capsule Browser".into(),
+        window_width: WINDOW_WIDTH,
+        window_height: WINDOW_HEIGHT,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
 async fn main() {
     env_logger::builder()
         .filter_level(log::LevelFilter::Debug)

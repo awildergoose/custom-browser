@@ -1,13 +1,18 @@
 use std::sync::Arc;
 
 use crate::{
+    WINDOW_HEIGHT, WINDOW_WIDTH,
     capsule::{
         Capsule,
         obj::{BoxedCapsuleObject, CapsuleObject},
     },
     layout::{computed::ComputedStyling, styling::Styling},
 };
-use stretch::{Stretch, geometry::Size, style::Style};
+use stretch::{
+    Stretch,
+    geometry::Size,
+    style::{Dimension, Style},
+};
 
 pub fn compute_layout(capsule: &mut Capsule) {
     fn styling_to_stretch(s: &Styling) -> Style {
@@ -76,7 +81,18 @@ pub fn compute_layout(capsule: &mut Capsule) {
     }
 
     let root_node = stretch
-        .new_node(Style::default(), root_children_nodes)
+        .new_node(
+            Style {
+                #[allow(clippy::cast_precision_loss)]
+                size: Size {
+                    width: Dimension::Points(WINDOW_WIDTH as f32),
+                    height: Dimension::Points(WINDOW_HEIGHT as f32),
+                },
+                flex_direction: stretch::style::FlexDirection::Column,
+                ..Default::default()
+            },
+            root_children_nodes,
+        )
         .unwrap();
 
     stretch

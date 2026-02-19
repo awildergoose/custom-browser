@@ -1,6 +1,7 @@
 use macroquad::{color::Color, text::measure_text};
 use orx_concurrent_vec::ConcurrentVec;
 use roxmltree::Node;
+use stretch::style::Dimension;
 
 use crate::{
     capsule::{
@@ -30,6 +31,17 @@ fn try_parse_color(color: &str) -> Option<Color> {
     };
 
     Some(Color::from_rgba(r, g, b, a))
+}
+
+#[must_use]
+fn try_parse_dimension(text: &str) -> Option<Dimension> {
+    if text.ends_with('%') {
+        return Some(Dimension::Percent(
+            text.strip_suffix("%").unwrap().parse::<f32>().ok()? / 100.0,
+        ));
+    }
+
+    Some(Dimension::Points(text.parse::<f32>().ok()?))
 }
 
 #[must_use]
@@ -103,16 +115,16 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         }
 
         if let Some(width) = child.attribute("width") {
-            if let Ok(width) = width.parse::<f32>() {
-                style.width = Some(stretch::style::Dimension::Points(width));
+            if let Some(width) = try_parse_dimension(width) {
+                style.width = Some(width);
             } else {
                 log::warn!("bad width property: '{width}'");
             }
         }
 
         if let Some(height) = child.attribute("height") {
-            if let Ok(height) = height.parse::<f32>() {
-                style.height = Some(stretch::style::Dimension::Points(height));
+            if let Some(height) = try_parse_dimension(height) {
+                style.height = Some(height);
             } else {
                 log::warn!("bad height property: '{height}'");
             }
@@ -128,15 +140,23 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         }
 
         let children = children.into();
-        let style = style.into();
+        let mut style_clone = style.clone();
+        let style_arc = style.into();
 
         Some(match tag_name {
             "text" => Box::new(CSText::new(
                 child_text.as_ref().unwrap().clone(),
                 children,
-                style,
+                style_arc,
             )),
-            "obj" => Box::new(CSObj::new(children, style)),
+            "obj" => Box::new(CSObj::new(children, style_arc)),
+            "br" => {
+                let line_height = 16.0;
+                style_clone.height = Some(Dimension::Points(line_height));
+                style_clone.width = Some(Dimension::Points(0.0));
+
+                Box::new(CSObj::new(ConcurrentVec::new().into(), style_clone.into()))
+            }
             _ => panic!("unknown node type: '{tag_name}'"),
         })
     }
