@@ -23,11 +23,13 @@ jobs:
     strategy:
       matrix:
         target:
-          - {
-              displayName: 32-bit Windows,
-              rustTarget: i686-pc-windows-msvc,
-              runner: windows-latest,
-            }
+          # Currently: miniquad calls the wrong functions in src/native/windows.rs:L279
+          # and src/native/windows.rs:L948 and causes a compile error
+          # - {
+          #     displayName: 32-bit Windows,
+          #     rustTarget: i686-pc-windows-msvc,
+          #     runner: windows-latest,
+          #   }
           - {
               displayName: 64-bit Windows,
               rustTarget: x86_64-pc-windows-msvc,
