@@ -24,4 +24,8 @@ impl CapsuleObject for CSScript {
     }
 
     fn render(&self) {}
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }

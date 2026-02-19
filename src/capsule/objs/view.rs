@@ -16,6 +16,10 @@ impl CapsuleObject for CapsuleView {
     }
 
     fn render(&self) {}
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 impl_obj_traits!(CapsuleView);

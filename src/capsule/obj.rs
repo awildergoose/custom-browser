@@ -1,4 +1,4 @@
-use std::{fmt::Debug, sync::Arc};
+use std::{any::Any, fmt::Debug, sync::Arc};
 
 use macroquad::math::Rect;
 use orx_concurrent_vec::{ConcurrentElement, ConcurrentVec};
@@ -17,6 +17,7 @@ pub type CapsuleObjectChildren = Arc<ConcurrentVec<BoxedCapsuleObject>>;
 pub type CapsuleObjectEvents = Arc<ConcurrentVec<CapsuleObjectEvent>>;
 
 pub trait CapsuleObject: Debug {
+    fn as_any(&self) -> &dyn Any;
     fn base(&self) -> Arc<CapsuleObjectBase>;
     fn render(&self);
     fn bounding_box(&self) -> Rect {
@@ -154,14 +155,18 @@ where
 
 #[macro_export]
 macro_rules! impl_obj_traits {
-    ($name:ident) => {
+    ($name:ident => |$fields:ident| $body:block) => {
         use mlua::UserData;
 
         impl UserData for $name {
-            fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
-                $crate::lua::holder::add_object_fields::<Self, F>(fields);
-                // TODO: allow custom fields here
+            fn add_fields<F: mlua::UserDataFields<Self>>($fields: &mut F) {
+                $crate::lua::holder::add_object_fields::<Self, F>($fields);
+                $body
             }
         }
+    };
+
+    ($name:ident) => {
+        $crate::impl_obj_traits!($name => |fields| {});
     };
 }

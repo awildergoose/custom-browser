@@ -3,17 +3,20 @@
         <title>test capsule</title>
         <script>
             function onclick()
-            print(`mem usage: {capsule.used_memory()} bytes`)
-            capsule.root().children[1].children[2].style.width = `{math.random(1, 100)}%`
-            print(capsule.root().children[1].children[2].style.width)
+            -- print(`mem usage: {capsule.used_memory()} bytes`)
+            -- capsule.root().children[1].children[2].style.width = `{math.random(1, 100)}%`
+            -- print(capsule.root().children[1].children[2].style.width)
+            capsule.root().children[1].text = `{math.random(1, 1000000)}`
+            print(capsule.root().children[1].text)
             end
 
-            print(capsule.root().children[1].children[2].style.width)
+            print(capsule.root().children[1].text)
+            -- print(capsule.root().children[1].children[2].style.width)
         </script>
     </meta>
     <view>
-        <obj justify="space_between" onclick="onclick">
-            <text>hello, world!</text>
+        <text onclick="onclick">hello, world!</text>
+        <!-- <obj justify="space_between" onclick="onclick">
             <obj width="50%" height="20" color="green" />
             <text color="#ff00008f">hello, world! b5</text>
         </obj>
@@ -21,6 +24,6 @@
             <text>ahello world but cooler!</text>
             <obj width="41.5%" height="20" color="red" />
             <text color="#ff00008f">hello, world! b2</text>
-        </obj>
+        </obj> -->
     </view>
 </capsule>

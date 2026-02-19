@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::{capsule::obj::CapsuleObject, layout::styling::StylingHandle};
+use crate::{
+    capsule::{obj::CapsuleObject, objs::text::CSText},
+    layout::styling::StylingHandle,
+};
 use mlua::{UserData, Value};
 
 #[derive(Debug, Clone)]
@@ -9,6 +12,23 @@ pub struct CapsuleObjectHandle(pub Arc<dyn CapsuleObject + Send + Sync>);
 impl UserData for CapsuleObjectHandle {
     fn add_fields<F: mlua::UserDataFields<Self>>(fields: &mut F) {
         crate::lua::holder::add_object_fields::<Self, F>(fields);
+
+        fields.add_field_method_get("text", |lua, this| {
+            if let Some(text) = this.0.as_any().downcast_ref::<CSText>() {
+                return Ok(Value::String(lua.create_string(&*text.text.read())?));
+            }
+
+            Ok(Value::Nil)
+        });
+
+        fields.add_field_method_set("text", |_lua, this, v: String| {
+            if let Some(text) = this.0.as_any().downcast_ref::<CSText>() {
+                text.set_text(v);
+                return Ok(());
+            }
+
+            Ok(())
+        });
     }
 }
 
@@ -43,5 +63,9 @@ impl CapsuleObject for CapsuleObjectHandle {
 
     fn render(&self) {
         self.0.render();
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }
