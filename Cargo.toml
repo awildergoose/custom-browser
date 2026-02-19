@@ -8,6 +8,7 @@ anyhow = "1.0.101"
 env_logger = "0.11.9"
 log = "0.4.29"
 macroquad = "0.4.14"
+mlua = { version = "0.11.6", features = ["anyhow", "luau", "luau-jit", "macros", "mlua_derive", "serde", "send"] }
 orx-concurrent-vec = "3.10.0"
 parking_lot = { version = "0.12.5", features = ["deadlock_detection"] }
 parse-color = "0.1.2"

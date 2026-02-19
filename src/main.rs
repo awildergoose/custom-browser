@@ -11,6 +11,7 @@ use crate::{
 
 pub mod capsule;
 pub mod layout;
+pub mod lua;
 pub mod renderer;
 
 pub const WINDOW_WIDTH: i32 = 800;
@@ -34,12 +35,14 @@ async fn main() {
     let mut capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap())
         .expect("failed to parse capsule");
     compute_layout(&mut capsule);
+    capsule.run_scripts();
 
     loop {
         if is_key_pressed(KeyCode::F5) {
             capsule = parse_capsule(&std::fs::read_to_string("test.capsule").unwrap())
                 .expect("failed to parse capsule");
             compute_layout(&mut capsule);
+            capsule.run_scripts();
             log::info!("Reloaded!");
         }
 

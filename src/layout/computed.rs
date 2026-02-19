@@ -1,4 +1,4 @@
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ComputedStyling {
     pub x: f32,
     pub y: f32,

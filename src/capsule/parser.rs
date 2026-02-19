@@ -7,7 +7,7 @@ use crate::{
     capsule::{
         Capsule,
         obj::{BoxedCapsuleObject, CapsuleMeta, CapsuleObject, CapsuleView},
-        objs::{obj::CSObj, text::CSText},
+        objs::{obj::CSObj, script::CSScript, text::CSText},
     },
     layout::styling::Styling,
     renderer::constants::BR_LINE_HEIGHT,
@@ -61,8 +61,25 @@ fn parse_capsule_meta(child: Node) -> CapsuleMeta {
     let mut meta = CapsuleMeta::default();
     assert_eq!(child.tag_name().name(), "meta");
 
-    if let Some(title) = child.children().find(|c| c.tag_name().name() == "title") {
-        title.text().unwrap().clone_into(&mut meta.title);
+    for node in child.children() {
+        if node.is_text() || node.is_comment() {
+            continue;
+        }
+
+        let tag_name = node.tag_name().name();
+        let text = node.text().map(std::string::ToString::to_string);
+
+        match tag_name {
+            "title" => {
+                meta.title = text.unwrap();
+            }
+            "script" => {
+                meta.scripts.push(CSScript::new(text.unwrap()));
+            }
+            _ => {
+                log::warn!("unknown node type: '{tag_name}'");
+            }
+        }
     }
 
     meta
@@ -193,6 +210,9 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
                     style_clone.into(),
                 )))
             }
+            "script" => Some(Box::new(CSScript::new(
+                child_text.as_ref().unwrap().clone(),
+            ))),
             _ => {
                 log::warn!("unknown node type: '{tag_name}'");
                 None

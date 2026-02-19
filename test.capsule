@@ -1,6 +1,13 @@
 <capsule>
     <meta>
         <title>test capsule</title>
+        <script>
+            function onclick()
+            print("clicked!")
+            end
+
+            print("init capsule script!")
+        </script>
     </meta>
     <view>
         <obj justify="spacebetween">
