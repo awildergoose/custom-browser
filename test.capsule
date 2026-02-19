@@ -21,12 +21,12 @@
         <text onclick="onclick" background_color="#ff00008f" color="green" font_size="32">hello,
             world!!</text>
         <obj justify="space_between" onclick="onclick">
-            <obj width="50%" height="20" color="green" />
+            <obj width="50%" height="20" background_color="green" />
             <text color="#ff00008f">hello, world! b5</text>
         </obj>
         <obj align="center" justify="flex_start" flexdir="column">
             <text id="cooltextelement">ahello world but cooler!</text>
-            <obj width="41.5%" height="20" color="red" />
+            <obj width="41.5%" height="20" background_color="red" />
             <text color="#ff00008f">hello, world! b2</text>
         </obj>
     </view>

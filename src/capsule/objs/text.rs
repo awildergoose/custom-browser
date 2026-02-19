@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use macroquad::shapes::draw_rectangle;
 use parking_lot::RwLock;
 
 use crate::{
@@ -38,16 +37,6 @@ impl CapsuleObject for CSText {
     fn render(&self) {
         let computed = self.base.computed_style.read();
         let style = self.base.style.read();
-
-        if let Some(color) = style.background_color {
-            draw_rectangle(
-                computed.x,
-                computed.y,
-                computed.width,
-                computed.height,
-                color.as_macroquad(),
-            );
-        }
 
         draw_text_top_left(
             &self.text.read(),
