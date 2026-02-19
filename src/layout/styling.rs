@@ -19,11 +19,12 @@ use crate::{
 pub struct Styling {
     pub align: COAlignItems,
     pub justify: COJustifyContent,
-    pub flex_direction: COFlexDirection,
+    pub flexdir: COFlexDirection,
 
     pub width: Option<CODimension>,
     pub height: Option<CODimension>,
     pub color: Option<COColor>,
+    pub background_color: Option<COColor>,
     pub font_size: u16,
 
     dirty: bool,
@@ -49,11 +50,12 @@ impl Default for Styling {
         Self {
             align: COAlignItems::default(),
             justify: COJustifyContent::default(),
-            flex_direction: COFlexDirection::default(),
+            flexdir: COFlexDirection::default(),
             width: None,
             height: None,
             font_size: DEFAULT_TEXT_SIZE,
             color: None,
+            background_color: None,
             dirty: false,
         }
     }
@@ -151,17 +153,17 @@ impl UserData for StylingHandle {
             Ok(())
         });
 
-        fields.add_field_method_get("flex_direction", |lua, this| {
+        fields.add_field_method_get("flexdir", |lua, this| {
             Ok(Value::String(
-                lua.create_string(this.0.read().flex_direction.as_ref())?,
+                lua.create_string(this.0.read().flexdir.as_ref())?,
             ))
         });
 
-        fields.add_field_method_set("flex_direction", |_lua, this, v: String| {
-            let flex_direction = v
+        fields.add_field_method_set("flexdir", |_lua, this, v: String| {
+            let flexdir = v
                 .parse::<COFlexDirection>()
-                .context("failed to parse flex_direction")?;
-            this.write().flex_direction = flex_direction;
+                .context("failed to parse flexdir")?;
+            this.write().flexdir = flexdir;
             Ok(())
         });
     }

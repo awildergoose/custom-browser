@@ -28,6 +28,42 @@ macro_rules! log_bad_property {
     };
 }
 
+macro_rules! enum_attr {
+    ($child: ident, $style: ident, $name: ident, $type: ty) => {
+        if let Some(value) = $child.attribute(stringify!($name)) {
+            if let Ok(parsed) = value.parse::<$type>() {
+                $style.$name = parsed;
+            } else {
+                log_bad_property!(value);
+            }
+        }
+    };
+}
+
+macro_rules! dimension_attr {
+    ($child: ident, $style: ident, $name: ident) => {
+        if let Some(value) = $child.attribute(stringify!($name)) {
+            if let Some(parsed) = try_parse_dimension(value) {
+                $style.$name = Some(parsed);
+            } else {
+                log_bad_property!(value);
+            }
+        }
+    };
+}
+
+macro_rules! color_attr {
+    ($child: ident, $style: ident, $name: ident) => {
+        if let Some(value) = $child.attribute(stringify!($name)) {
+            if let Some(parsed) = try_parse_color(value) {
+                $style.$name = Some(parsed);
+            } else {
+                log_bad_property!(value);
+            }
+        }
+    };
+}
+
 #[must_use]
 pub fn try_parse_color(color: &str) -> Option<COColor> {
     if let Some([r, g, b, a]) = parse_color::parse(color) {
@@ -119,53 +155,13 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
 
         let mut style = Styling::default();
 
-        if let Some(align) = child.attribute("align") {
-            if let Ok(align) = align.parse::<COAlignItems>() {
-                style.align = align;
-            } else {
-                log_bad_property!(align);
-            }
-        }
-
-        if let Some(justify) = child.attribute("justify") {
-            if let Ok(justify) = justify.parse::<COJustifyContent>() {
-                style.justify = justify;
-            } else {
-                log_bad_property!(justify);
-            }
-        }
-
-        if let Some(flexdir) = child.attribute("flexdir") {
-            if let Ok(flexdir) = flexdir.parse::<COFlexDirection>() {
-                style.flex_direction = flexdir;
-            } else {
-                log_bad_property!(flexdir);
-            }
-        }
-
-        if let Some(color) = child.attribute("color") {
-            if let Some(color) = try_parse_color(color) {
-                style.color = Some(color);
-            } else {
-                log_bad_property!(color);
-            }
-        }
-
-        if let Some(width) = child.attribute("width") {
-            if let Some(width) = try_parse_dimension(width) {
-                style.width = Some(width);
-            } else {
-                log_bad_property!(width);
-            }
-        }
-
-        if let Some(height) = child.attribute("height") {
-            if let Some(height) = try_parse_dimension(height) {
-                style.height = Some(height);
-            } else {
-                log_bad_property!(height);
-            }
-        }
+        enum_attr!(child, style, align, COAlignItems);
+        enum_attr!(child, style, justify, COJustifyContent);
+        enum_attr!(child, style, flexdir, COFlexDirection);
+        dimension_attr!(child, style, width);
+        dimension_attr!(child, style, height);
+        color_attr!(child, style, color);
+        color_attr!(child, style, background_color);
 
         let events = ConcurrentVec::new();
 

@@ -44,7 +44,7 @@ pub fn compute_layout(capsule: &mut Capsule) {
             size: stretch::geometry::Size { width, height },
             align_items: s.align.as_stretch(),
             justify_content: s.justify.as_stretch(),
-            flex_direction: s.flex_direction.as_stretch(),
+            flex_direction: s.flexdir.as_stretch(),
             ..Default::default()
         }
     }

@@ -25,15 +25,15 @@ impl CapsuleObject for CSObj {
     }
 
     fn render(&self) {
-        let computed_style = self.base.computed_style.read();
+        let computed = self.base.computed_style.read();
         let style = self.base.style.read();
 
         if let Some(color) = style.color {
             draw_rectangle(
-                computed_style.x,
-                computed_style.y,
-                computed_style.width,
-                computed_style.height,
+                computed.x,
+                computed.y,
+                computed.width,
+                computed.height,
                 color.as_macroquad(),
             );
         }
