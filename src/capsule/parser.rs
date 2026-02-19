@@ -5,7 +5,8 @@ use roxmltree::Node;
 use crate::{
     capsule::{
         Capsule,
-        obj::{BoxedCapsuleObject, CSObj, CSText, CapsuleMeta, CapsuleObject, CapsuleView},
+        obj::{BoxedCapsuleObject, CapsuleMeta, CapsuleObject, CapsuleView},
+        objs::{obj::CSObj, text::CSText},
     },
     layout::styling::Styling,
 };
@@ -23,6 +24,7 @@ fn parse_capsule_meta(child: Node) -> CapsuleMeta {
 }
 
 #[must_use]
+#[allow(clippy::too_many_lines)]
 fn parse_capsule_view(view: Node) -> CapsuleView {
     fn parse_child(child: Node) -> Option<BoxedCapsuleObject> {
         if child.is_text() {
@@ -45,24 +47,30 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
         let mut style = Styling::default();
 
         if let Some(align) = child.attribute("align") {
+            use stretch::style::AlignItems::{Baseline, Center, FlexEnd, FlexStart, Stretch};
+
             style.align = match align {
-                "flexstart" => stretch::style::AlignItems::FlexStart,
-                "flexend" => stretch::style::AlignItems::FlexEnd,
-                "center" => stretch::style::AlignItems::Center,
-                "baseline" => stretch::style::AlignItems::Baseline,
-                "stretch" => stretch::style::AlignItems::Stretch,
+                "flexstart" => FlexStart,
+                "flexend" => FlexEnd,
+                "center" => Center,
+                "baseline" => Baseline,
+                "stretch" => Stretch,
                 _ => panic!("bad align property: {align}"),
             };
         }
 
         if let Some(justify) = child.attribute("justify") {
+            use stretch::style::JustifyContent::{
+                Center, FlexEnd, FlexStart, SpaceAround, SpaceBetween, SpaceEvenly,
+            };
+
             style.justify = match justify {
-                "flexstart" => stretch::style::JustifyContent::FlexStart,
-                "flexend" => stretch::style::JustifyContent::FlexEnd,
-                "center" => stretch::style::JustifyContent::Center,
-                "spacebetween" => stretch::style::JustifyContent::SpaceBetween,
-                "spacearound" => stretch::style::JustifyContent::SpaceAround,
-                "spaceevenly" => stretch::style::JustifyContent::SpaceEvenly,
+                "flexstart" => FlexStart,
+                "flexend" => FlexEnd,
+                "center" => Center,
+                "spacebetween" => SpaceBetween,
+                "spacearound" => SpaceAround,
+                "spaceevenly" => SpaceEvenly,
                 _ => panic!("bad justify property: {justify}"),
             };
         }
@@ -87,6 +95,43 @@ fn parse_capsule_view(view: Node) -> CapsuleView {
             } else {
                 log::warn!("bad height property: '{height}'");
             }
+        }
+
+        if let Some(color) = child.attribute("color") {
+            use macroquad::color::colors::{
+                BEIGE, BLACK, BLANK, BLUE, BROWN, DARKBLUE, DARKBROWN, DARKGRAY, DARKGREEN,
+                DARKPURPLE, GOLD, GRAY, GREEN, LIGHTGRAY, LIME, MAGENTA, MAROON, ORANGE, PINK,
+                PURPLE, RED, SKYBLUE, VIOLET, WHITE, YELLOW,
+            };
+
+            style.color = match color {
+                "lightgray" => LIGHTGRAY,
+                "gray" => GRAY,
+                "darkgray" => DARKGRAY,
+                "yellow" => YELLOW,
+                "gold" => GOLD,
+                "orange" => ORANGE,
+                "pink" => PINK,
+                "red" => RED,
+                "maroon" => MAROON,
+                "green" => GREEN,
+                "lime" => LIME,
+                "darkgreen" => DARKGREEN,
+                "skyblue" => SKYBLUE,
+                "blue" => BLUE,
+                "darkblue" => DARKBLUE,
+                "purple" => PURPLE,
+                "violet" => VIOLET,
+                "darkpurple" => DARKPURPLE,
+                "beige" => BEIGE,
+                "brown" => BROWN,
+                "darkbrown" => DARKBROWN,
+                "white" => WHITE,
+                "black" => BLACK,
+                "blank" => BLANK,
+                "magenta" => MAGENTA,
+                _ => panic!("bad color property: '{color}'"),
+            };
         }
 
         let children = children.into();
