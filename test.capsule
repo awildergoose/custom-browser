@@ -2,11 +2,11 @@
     <meta>
         <title>test capsule</title>
         <script>
-            function onclick()
+            function onclick(btn: number)
             -- print(`mem usage: {capsule.used_memory()} bytes`)
             -- capsule.root().children[1].children[2].style.width = `{math.random(1, 100)}%`
             -- print(capsule.root().children[1].children[2].style.width)
-            capsule.root().children[1].text = `{math.random(1, 1000000)}`
+            capsule.root().children[1].text = `mouse: {btn}`
             -- capsule.root().children[1].style.color = "red"
             print(capsule.root().children[1].text)
             end

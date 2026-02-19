@@ -9,7 +9,11 @@ use crate::capsule::{
 };
 
 pub fn update_events(capsule: &ArcLock<Capsule>) {
-    if is_mouse_button_pressed(MouseButton::Left) {
+    let is_m1_pressed = is_mouse_button_pressed(MouseButton::Left);
+    let is_m2_pressed = is_mouse_button_pressed(MouseButton::Right);
+    let is_m3_pressed = is_mouse_button_pressed(MouseButton::Middle);
+
+    if is_m1_pressed || is_m2_pressed || is_m3_pressed {
         let mouse_position = Vec2::from(mouse_position());
         let mut callbacks = vec![];
 
@@ -33,9 +37,23 @@ pub fn update_events(capsule: &ArcLock<Capsule>) {
 
         let mut lua = capsule_read.lua.write();
 
+        let mut buttons = vec![];
+
+        if is_m1_pressed {
+            buttons.push(1);
+        }
+        if is_m2_pressed {
+            buttons.push(2);
+        }
+        if is_m3_pressed {
+            buttons.push(3);
+        }
+
         for cb in callbacks {
-            if let Err(e) = lua.get_function(&cb).unwrap().call::<()>(()) {
-                log::error!("Lua error: {e}");
+            for btn in &buttons {
+                if let Err(e) = lua.get_function(&cb).unwrap().call::<()>(*btn) {
+                    log::error!("Lua error: {e}");
+                }
             }
         }
 
